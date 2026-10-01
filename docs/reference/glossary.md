@@ -20,8 +20,12 @@ Their options differ.
 up to five, and thetaterm takes the first one installed.
 
 **Reference**: The parts of the chosen command's man page that best
-match the request, put in the prompt.
+match the request, put in the prompt, after the command's note if it has one.
 _Avoid:_ context, docs.
+
+**Note**: A few lines thetaterm ships about a program, for facts its man page
+excerpt tends to miss. It goes first in the reference.
+_Avoid:_ hint, tip.
 
 **Checks**: What a command must pass before you're asked to run it: valid shell syntax,
 and every program it calls is installed.

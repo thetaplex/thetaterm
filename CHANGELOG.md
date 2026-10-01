@@ -7,6 +7,12 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### Added
+
+- Short notes that ship with thetaterm go before a program's man page excerpt,
+  for facts the excerpt tends to miss. The first is for `awk`: fields split on
+  spaces, so CSV files need `-F,`.
+
 ### Fixed
 
 - A command that loads a zsh function and then calls it, such as

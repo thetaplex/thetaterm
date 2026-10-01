@@ -52,6 +52,20 @@ viewer.
 4. Run `just eval` and check the new query passes or fails for the reason you
    expect.
 
+## Fix a failure with a note
+
+If a model fails because the man page excerpt left out a fact about the
+program, add a note for it:
+
+1. Write the fact in `thetaterm/notes/<program>.md`, in 600 characters or
+   fewer. If GNU and BSD differ, say which is which.
+2. State the fact about the program, not the answer to the query. "Fields
+   split on spaces, so CSV needs `-F,`" is a note; "print column 2 of data.csv
+   with `awk -F, '{print $2}'`" is the answer.
+3. Run `just eval` and check the query now passes and nothing else fails.
+
+See [ADR 0006](../adr/0006-put-a-short-note-before-the-man-page-excerpt.md).
+
 ## Files
 
 | File | Holds |
