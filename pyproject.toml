@@ -1,12 +1,27 @@
 [project]
 name = "thetaterm"
-version = "0.1.0"
+version = "0.1.1"
 description = "Supercharge your terminal with AI"
 readme = "README.md"
 authors = [{ name = "ThetaPlex", email = "support@thetaplex.com" }]
 license = "Apache-2.0"
 license-files = ["LICENSE", "NOTICE"]
 requires-python = ">=3.13"
+keywords = ["shell", "terminal", "cli", "llm", "ollama", "natural-language"]
+# no License :: classifier: license (SPDX) replaces it, and PyPI rejects both
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Shells",
+    "Topic :: Utilities",
+]
 dependencies = [
     "python-dotenv>=1.2.3",
     "rich>=14.1.0",

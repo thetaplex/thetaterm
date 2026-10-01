@@ -49,3 +49,23 @@ changing it, read [How it works](docs/explanation/how-it-works.md) and the
 
 Bugs and ideas go in [issues](https://github.com/thetaplex/thetaterm/issues).
 For a wrong command, include the query, the model, and your OS and shell.
+
+## Releasing
+
+Maintainers only.
+
+1. In a pull request, set the version with `uv version X.Y.Z`, and rename
+   `[Unreleased]` in [CHANGELOG.md](CHANGELOG.md) to `[X.Y.Z] - YYYY-MM-DD`
+   with a fresh `[Unreleased]` above it and the compare links at the bottom.
+2. After it merges, publish a GitHub release with a new tag `vX.Y.Z` on
+   `main`, using that changelog entry as the notes:
+
+   ```bash
+   gh release create vX.Y.Z --target main --title "Thetaterm X.Y.Z" --notes "..."
+   ```
+
+3. The [publish workflow](.github/workflows/publish.yml) uploads it to PyPI.
+   It stops if the tag doesn't match the version in `pyproject.toml`.
+
+A version on PyPI can't be replaced or re-uploaded. A mistake needs a new
+version.
