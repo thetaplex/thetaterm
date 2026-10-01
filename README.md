@@ -1,16 +1,19 @@
-# Thetaterm
+# thetaterm
 
 Supercharge your terminal with AI: describe what you want, get a shell command
 that is correct for *your* system, confirm, run.
 
 ## Why
 
-Small local models know what `find` or `sed` does, but not which options your
-copy has. GNU, BSD and BusyBox tools differ, so a command that's right on Linux
-can fail on a Mac. Thetaterm detects your OS and whether your tools are GNU,
-BSD or BusyBox, and gives the model the installed tool's `man` page. Every
-command is checked before you're asked to run it. It works with any model
-served over an OpenAI-compatible API, including ones on your own machine.
+You shouldn't have to remember whether it's `tar -xzf` or `tar -zxvf`, or
+which `sed -i` your Mac accepts. Say what you want in plain words and **thetaterm**
+writes the command for you. It's right for *your* system, because **thetaterm**
+checks whether your tools are GNU, BSD or BusyBox and shows the model the
+installed tool's `man` page. It runs on a small model on your own machine, so
+there is no subscription and no per-token bill. And it stays private: you're
+not pasting commands full of file paths, hostnames and project names into a
+chat website to work out what they do. With the default local model, your
+requests never leave your computer.
 
 ## Requirements
 
