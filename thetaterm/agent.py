@@ -343,6 +343,8 @@ class Agent:
         prompt += (
             f"\nTask: {query}\nWrite one {os.path.basename(SHELL)} command for this system. "
             "Use real paths, never placeholders like /path/to; if the task names no location, use the current directory (.). "
+            # small models chain programs they don't need, and break the chain (evals)
+            "Prefer a single program; use a pipeline or && only when one program can't do the task. "
             "Reply with the command only.\n"
         )
 
