@@ -18,7 +18,7 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 ### Changed
 
 - The README asks for a model with at least 3 billion parameters. In the evals,
-  `qwen2.5-coder:3b` passed 48 of 50 queries and `qwen2.5-coder:0.5b` 22.
+  `qwen2.5-coder:3b` passed 46 of 50 queries and `qwen2.5-coder:0.5b` 22.
 
 ### Fixed
 
