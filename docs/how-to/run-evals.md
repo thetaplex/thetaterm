@@ -60,4 +60,4 @@ viewer.
 | `evals/promptfoo/regression.yaml` | queries some model has failed |
 | `evals/promptfoo/local.yaml` | local models |
 | `evals/promptfoo/cloud.yaml` | Ollama Cloud models |
-| `evals/promptfoo/provider.py` | runs Thetaterm for promptfoo and traces each step |
+| `evals/promptfoo/provider.py` | runs thetaterm for promptfoo and traces each step |

@@ -1,12 +1,12 @@
 # Glossary
 
 **Request**: What you ask for, in plain language, with `-q` or at the `>` prompt.
-_Avoid:_ prompt (that's what Thetaterm sends to the model).
+_Avoid:_ prompt (that's what thetaterm sends to the model).
 
-**Command**: The one shell command line Thetaterm proposes for a request. It may contain
+**Command**: The one shell command line thetaterm proposes for a request. It may contain
 pipes and `&&`.
 
-**Prompt**: The text Thetaterm sends to the model. It holds the system description, the
+**Prompt**: The text thetaterm sends to the model. It holds the system description, the
 reference and the request.
 
 **System description**: One line naming your OS, userland and shell, for example
@@ -17,7 +17,7 @@ system: GNU coreutils (most Linux), BSD (macOS) or BusyBox (Alpine, embedded).
 Their options differ.
 
 **Chosen command**: The program the request is built around, such as `find`. The model suggests
-up to five, and Thetaterm takes the first one installed.
+up to five, and thetaterm takes the first one installed.
 
 **Reference**: The parts of the chosen command's man page that best
 match the request, put in the prompt.

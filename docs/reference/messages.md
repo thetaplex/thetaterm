@@ -1,11 +1,11 @@
 # Messages
 
-Messages Thetaterm prints, what they mean, and what to do. `…` stands for text
+Messages thetaterm prints, what they mean, and what to do. `…` stands for text
 that varies.
 
 ## Errors
 
-These stop the request. In one-shot mode Thetaterm exits with status `1`.
+These stop the request. In one-shot mode thetaterm exits with status `1`.
 
 ### `cannot reach <url>: …`
 

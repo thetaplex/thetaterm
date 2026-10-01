@@ -109,7 +109,7 @@ def tterm(
     if query is not None:
         sys.exit(process_query(agent, query, yes))
 
-    console.print(f"[bold cyan]Thetaterm[/bold cyan] · {model} · {agent.env}")
+    console.print(f"[bold cyan]thetaterm[/bold cyan] · {model} · {agent.env}")
     console.print("[dim]Describe what you want. Ctrl-D to exit.[/dim]")
     while True:
         try:

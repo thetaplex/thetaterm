@@ -16,12 +16,12 @@ You'll get a reply within 7 days.
 
 ## Scope
 
-Thetaterm runs shell commands a model writes. In scope:
+thetaterm runs shell commands a model writes. In scope:
 
 - a command running without confirmation when it should have asked
 - the outside-the-current-directory check missing a plain path, `~`, `..`,
   a variable, a bare `cd`, `cd -`, `popd`, or `sudo`
-- Thetaterm running any program before you confirm a command
+- thetaterm running any program before you confirm a command
 - the API key reaching an endpoint other than `THETATERM_BASE_URL`, or config
   being read from somewhere other than the per-user `.env`
 

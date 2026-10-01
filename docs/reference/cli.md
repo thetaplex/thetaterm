@@ -7,7 +7,7 @@ tterm [-q QUERY] [-m MODEL] [-y] [--think]
 tterm --help
 ```
 
-With `-q`, Thetaterm handles one request and exits. Without it, Thetaterm starts
+With `-q`, thetaterm handles one request and exits. Without it, thetaterm starts
 interactive mode.
 
 ## Options
@@ -29,7 +29,7 @@ running. Commands that reach outside the current directory still ask, even with
 
 ## Interactive mode
 
-Thetaterm prints the model and the detected system, then shows a `>` prompt.
+thetaterm prints the model and the detected system, then shows a `>` prompt.
 Each line you type is one request. Empty lines are ignored. Ctrl-D or Ctrl-C at
 the `>` prompt exits. Errors are printed and the session carries on.
 
@@ -52,7 +52,7 @@ runs in the current directory. See
 | the command's own status | `-q`: the command ran |
 | `0` | `-q`: you declined to run it. Interactive: you pressed Ctrl-D or Ctrl-C at the `>` prompt |
 | `1` | `-q`: no command was produced (server unreachable, server error, or no command passed the checks) |
-| `1` | you pressed Ctrl-D or Ctrl-C at `Run it?`. Thetaterm prints `Aborted.` and exits, in interactive mode too |
+| `1` | you pressed Ctrl-D or Ctrl-C at `Run it?`. thetaterm prints `Aborted.` and exits, in interactive mode too |
 | `2` | invalid option or argument |
 | `130` | `-q`: you pressed Ctrl-C while the model was thinking or the command was running. Interactive: the same stops that request and returns to the `>` prompt |
 

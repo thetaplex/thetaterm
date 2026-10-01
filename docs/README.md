@@ -1,13 +1,13 @@
-# Thetaterm documentation
+# thetaterm documentation
 
-Thetaterm turns a plain-language request into one shell command that fits
+thetaterm turns a plain-language request into one shell command that fits
 your system, shows it to you, and runs it if you agree.
 
 ## Who this is for
 
 - **Users** who run commands in a terminal on macOS or Linux and want help
   writing them. You don't need to know Python.
-- **Contributors** who want to change Thetaterm or measure how well models do.
+- **Contributors** who want to change thetaterm or measure how well models do.
   Read [CONTRIBUTING.md](../CONTRIBUTING.md) first.
 
 ## How it's organised
@@ -28,8 +28,8 @@ Each page does one job, following [Diátaxis](https://diataxis.fr/):
 
 ## Conventions
 
-- `Monospace` is something you type or something Thetaterm prints.
-- `$ ` at the start of a line is the command Thetaterm proposes. Don't type it.
+- `Monospace` is something you type or something thetaterm prints.
+- `$ ` at the start of a line is the command thetaterm proposes. Don't type it.
 - Warnings come before the step they apply to, marked **Warning**.
 - Dates follow ISO 8601 (`YYYY-MM-DD`).
 - Terms are used as defined in the [glossary](reference/glossary.md).

@@ -4,7 +4,7 @@ Thanks for helping. By taking part you agree to the ThetaPlex
 [Code of Conduct](https://github.com/thetaplex/.github/blob/main/CODE_OF_CONDUCT.md).
 Report security issues privately, as described in [SECURITY.md](SECURITY.md).
 
-Thetaterm is maintained by the [ThetaPlex](https://github.com/thetaplex)
+thetaterm is maintained by the [ThetaPlex](https://github.com/thetaplex)
 organization, which enforces the Code of Conduct. Reach it at
 support@thetaplex.com.
 
@@ -61,7 +61,7 @@ Maintainers only.
    `main`, using that changelog entry as the notes:
 
    ```bash
-   gh release create vX.Y.Z --target main --title "Thetaterm X.Y.Z" --notes "..."
+   gh release create vX.Y.Z --target main --title "thetaterm X.Y.Z" --notes "..."
    ```
 
 3. The [publish workflow](.github/workflows/publish.yml) uploads it to PyPI.

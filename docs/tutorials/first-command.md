@@ -1,6 +1,6 @@
 # Tutorial: your first command
 
-In this tutorial you install Thetaterm, connect it to a local model, and use it
+In this tutorial you install thetaterm, connect it to a local model, and use it
 to list and inspect files. It takes about 10 minutes, plus the time to download
 a 10 GB model.
 
@@ -9,7 +9,7 @@ space.
 
 ## 1. Install a model server
 
-Thetaterm needs a model to talk to. You'll use Ollama, which runs models on
+thetaterm needs a model to talk to. You'll use Ollama, which runs models on
 your own machine, so nothing you type leaves it.
 
 Install Ollama from [ollama.com/download](https://ollama.com/download), then
@@ -21,7 +21,7 @@ ollama pull gemma4:e4b
 
 When it finishes, `ollama list` shows `gemma4:e4b`.
 
-## 2. Install Thetaterm
+## 2. Install thetaterm
 
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/) if you
 don't have it, then:
@@ -47,7 +47,7 @@ mkdir -p ~/tterm-practice && cd ~/tterm-practice
 touch notes.txt todo.txt && head -c 50000 /dev/urandom > big.bin
 ```
 
-Now ask Thetaterm:
+Now ask thetaterm:
 
 ```bash
 tterm -q "list files in this directory, largest first"
@@ -77,7 +77,7 @@ leaves the current directory: home path ~
 Run it? [y/N]:
 ```
 
-The command is in red, the default has changed to **N**, and Thetaterm tells
+The command is in red, the default has changed to **N**, and thetaterm tells
 you why. Press Enter to decline. Nothing runs.
 
 ## 5. Use interactive mode
@@ -89,23 +89,23 @@ tterm
 ```
 
 ```
-Thetaterm · gemma4:e4b · macOS 26.6.2, BSD userland, zsh shell
+thetaterm · gemma4:e4b · macOS 26.6.2, BSD userland, zsh shell
 Describe what you want. Ctrl-D to exit.
 
 >
 ```
 
-The first line shows what Thetaterm detected about your machine. Type a
+The first line shows what thetaterm detected about your machine. Type a
 request at the `>` prompt, for example `count the lines in every txt file`,
 and answer the question as before. Press Ctrl-D when you're done.
 
 ## What you've learnt
 
-You've installed Thetaterm, used it in one-shot and interactive mode, and seen
+You've installed thetaterm, used it in one-shot and interactive mode, and seen
 it ask for extra care before a command reaches outside the current directory.
 
 Next:
 
 - [Command-line reference](../reference/cli.md) for every option and setting
-- [Safety model](../explanation/safety.md) for what Thetaterm checks, and what it doesn't
+- [Safety model](../explanation/safety.md) for what thetaterm checks, and what it doesn't
 - Remove the practice directory with `rm -r ~/tterm-practice`
