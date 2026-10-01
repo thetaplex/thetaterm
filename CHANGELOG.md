@@ -7,6 +7,11 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### Fixed
+
+- A command that loads a zsh function and then calls it, such as
+  `autoload -Uz zmv && zmv …`, is no longer rejected as "command not found".
+
 ## [0.2.0] - 2026-10-01
 
 ### Added
