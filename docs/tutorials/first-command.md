@@ -27,7 +27,7 @@ Install [uv](https://docs.astral.sh/uv/getting-started/installation/) if you
 don't have it, then:
 
 ```bash
-uv tool install git+https://github.com/thetaplex/thetaterm
+uv tool install thetaterm
 ```
 
 Check it's on your path:

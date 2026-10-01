@@ -1,0 +1,29 @@
+name: Publish
+
+# Publishing a GitHub Release uploads that tag to PyPI
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  pypi:
+    runs-on: ubuntu-latest
+    # matches the trusted publisher on pypi.org; add required reviewers here to gate uploads
+    environment:
+      name: pypi
+      url: https://pypi.org/p/thetaterm
+    permissions:
+      id-token: write  # trusted publishing: PyPI trusts this workflow, no token stored
+    steps:
+      # pinned to commits: this job can upload to PyPI, and a tag can be moved
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
+      # a PyPI version can't be re-uploaded, so refuse a tag that disagrees with pyproject.toml
+      - run: test "${GITHUB_REF_NAME#v}" = "$(uv version --short)"
+      - run: uv build
+      - run: uv publish

@@ -23,7 +23,7 @@ served over an OpenAI-compatible API, including ones on your own machine.
 ## Install
 
 ```bash
-uv tool install git+https://github.com/thetaplex/thetaterm
+uv tool install thetaterm
 ```
 
 ## Quickstart
@@ -37,7 +37,7 @@ $ ls -lS .
 Run it? [Y/n]:
 ```
 
-New to it? Follow the [tutorial](docs/tutorials/first-command.md).
+New to it? Follow the [tutorial](https://github.com/thetaplex/thetaterm/blob/main/docs/tutorials/first-command.md).
 
 ## Usage
 
@@ -49,31 +49,30 @@ tterm -y -q "show git status"          # run without confirming
 tterm --think -q "show the date 30 days from now"   # model reasons first, about 2x slower
 ```
 
-> [!WARNING]
-> `-y` runs whatever the model writes, unreviewed. In interactive mode that
-> applies to every line you type. Commands pass a syntax check, not a safety
-> check.
+> **Warning:** `-y` runs whatever the model writes, unreviewed. In interactive
+> mode that applies to every line you type. Commands pass a syntax check, not a
+> safety check.
 
 Commands that look like they reach outside the current directory (absolute,
 `~` or `..` paths, variables such as `$HOME`, `cd` home or back, or `sudo`) are shown in red and always ask first,
 defaulting to no, even with `-y`. This is a pattern match, not a sandbox. See
-the [safety model](docs/explanation/safety.md).
+the [safety model](https://github.com/thetaplex/thetaterm/blob/main/docs/explanation/safety.md).
 
 Settings (`THETATERM_MODEL`, `THETATERM_BASE_URL`, `THETATERM_API_KEY`) are
 read from the environment or `~/.config/thetaterm/.env`, never from a `.env`
 in the current directory. See the
-[command-line reference](docs/reference/cli.md) and
-[how to use another model server](docs/how-to/use-another-model-server.md).
+[command-line reference](https://github.com/thetaplex/thetaterm/blob/main/docs/reference/cli.md) and
+[how to use another model server](https://github.com/thetaplex/thetaterm/blob/main/docs/how-to/use-another-model-server.md).
 
 ## Documentation
 
-- [Documentation index](docs/README.md): tutorial, how-to guides, reference,
+- [Documentation index](https://github.com/thetaplex/thetaterm/blob/main/docs/README.md): tutorial, how-to guides, reference,
   explanation and design decisions
-- [Contributing](CONTRIBUTING.md): development setup, needs
+- [Contributing](https://github.com/thetaplex/thetaterm/blob/main/CONTRIBUTING.md): development setup, needs
   [just](https://just.systems/man/en/packages.html)
-- [Security policy](SECURITY.md)
-- [Changelog](CHANGELOG.md)
+- [Security policy](https://github.com/thetaplex/thetaterm/blob/main/SECURITY.md)
+- [Changelog](https://github.com/thetaplex/thetaterm/blob/main/CHANGELOG.md)
 
 ## License
 
-[Apache-2.0](LICENSE)
+[Apache-2.0](https://github.com/thetaplex/thetaterm/blob/main/LICENSE)

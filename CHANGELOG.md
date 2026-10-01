@@ -7,6 +7,16 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-01
+
+### Added
+
+- Published on PyPI: `uv tool install thetaterm`.
+
+### Changed
+
+- README links point at GitHub, so they work on the PyPI project page.
+
 ## [0.1.0] - 2026-10-01
 
 ### Added
@@ -29,5 +39,6 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Documentation in `docs/`: a tutorial, how-to guides, reference, explanation
   and architecture decision records.
 
-[Unreleased]: https://github.com/thetaplex/thetaterm/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/thetaplex/thetaterm/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/thetaplex/thetaterm/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/thetaplex/thetaterm/releases/tag/v0.1.0
