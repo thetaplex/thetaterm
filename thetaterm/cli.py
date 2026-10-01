@@ -1,6 +1,7 @@
 import os
 import subprocess
 import sys
+from importlib.metadata import version as installed_version
 from pathlib import Path
 from typing import Annotated
 from urllib.parse import urlsplit
@@ -56,6 +57,12 @@ def process_query(agent: Agent, query: str, yes: bool) -> int:
         return 130
 
 
+def show_version(value: bool):
+    if value:
+        print(f"thetaterm {installed_version('thetaterm')}")
+        raise typer.Exit()
+
+
 @app.command()
 def tterm(
     query: Annotated[
@@ -72,6 +79,16 @@ def tterm(
     ] = False,
     think: Annotated[
         bool, typer.Option("--think", help="Let the model reason first: slower")
+    ] = False,
+    version: Annotated[
+        bool,
+        typer.Option(
+            "--version",
+            "-V",
+            is_eager=True,
+            callback=show_version,
+            help="Show the installed version and exit",
+        ),
     ] = False,
 ):
     """
