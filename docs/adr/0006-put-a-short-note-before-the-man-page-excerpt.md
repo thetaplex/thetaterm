@@ -32,10 +32,12 @@ thetaterm ships notes in `thetaterm/notes/<program>.md`. When a program is
 chosen, its note goes first in the reference, and the man page excerpt gets
 the rest of the same 3,500-character budget. A note is at most 600 characters.
 
-Notes state general facts about the program, never the answer to an eval
-query, or the evals would measure the notes and not the model. One note covers
-all systems: it names GNU or BSD where they differ, and the prompt already
-says which one the system has.
+Notes state facts about the program: what its options do and where GNU and BSD
+differ. They never give an example command. Small models copy an example
+whatever the request, and an example close to an eval query's answer makes the
+evals measure the notes, not the model. A test rejects notes that contain a
+command line. One note covers all systems: the prompt already says which
+userland the system has.
 
 There are no personal notes.
 

@@ -10,9 +10,15 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 ### Added
 
 - Short notes that ship with thetaterm go before a program's man page excerpt,
-  for facts the excerpt tends to miss: `awk` (fields split on spaces, so CSV
-  files need `-F,`), `ps` (`--sort` is GNU only), `curl` (saves nothing without
-  `-O` or `-o`) and `ping` (runs until stopped without `-c`).
+  for facts the excerpt tends to miss: `awk` (fields split on spaces, not
+  commas), `ps` (`--sort` is GNU only), `curl` (saves nothing without `-O` or
+  `-o`), `ping` (runs until stopped without `-c`), `sed` (BSD and GNU `-i`
+  differ) and `grep` (`-r` with a file pattern misses subdirectories).
+
+### Changed
+
+- The README asks for a model with at least 3 billion parameters. In the evals,
+  `qwen2.5-coder:3b` passed 48 of 50 queries and `qwen2.5-coder:0.5b` 22.
 
 ### Fixed
 

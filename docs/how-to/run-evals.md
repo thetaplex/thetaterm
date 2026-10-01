@@ -59,9 +59,9 @@ program, add a note for it:
 
 1. Write the fact in `thetaterm/notes/<program>.md`, in 600 characters or
    fewer. If GNU and BSD differ, say which is which.
-2. State the fact about the program, not the answer to the query. "Fields
-   split on spaces, so CSV needs `-F,`" is a note; "print column 2 of data.csv
-   with `awk -F, '{print $2}'`" is the answer.
+2. Write facts, never an example command. "Fields are split on spaces and
+   tabs; -F sets the separator" is a note. Any command line, even one unlike
+   the query, is an example, and `just test` rejects it.
 3. Run `just eval` and check the query now passes and nothing else fails.
 
 See [ADR 0006](../adr/0006-put-a-short-note-before-the-man-page-excerpt.md).

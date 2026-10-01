@@ -1,5 +1,6 @@
 import io
 import json
+import re
 import shutil
 import urllib.error
 import urllib.request
@@ -144,12 +145,16 @@ def test_reference_without_a_man_page_is_just_the_note(monkeypatch):
     assert agent.reference("no_such_command_xyz", "q") == ""
 
 
-def test_shipped_notes_are_short():
+def test_shipped_notes_are_short_facts_not_examples():
     notes = list((files("thetaterm") / "notes").iterdir())
     assert notes
     for path in notes:
         assert path.name.endswith(".md")
-        assert 0 < len(path.read_text().strip()) <= MAX_NOTE_CHARS, path.name
+        text = path.read_text().strip()
+        assert 0 < len(text) <= MAX_NOTE_CHARS, path.name
+        # an example command is an answer the model copies (ADR 0006)
+        program = path.name.removesuffix(".md")
+        assert not re.search(rf"\b{program}\s+-|[|`]|'\{{", text), path.name
 
 
 def test_entries_keep_an_options_indented_paragraphs():

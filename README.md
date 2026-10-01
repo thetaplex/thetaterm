@@ -20,8 +20,9 @@ requests never leave your computer.
 - macOS or Linux
 - [uv](https://docs.astral.sh/uv/getting-started/installation/). It installs
   Python 3.13 or later for you if needed.
-- A model served over an OpenAI-compatible API. The default is `gemma4:e4b` on
-  [Ollama](https://ollama.com/download): `ollama pull gemma4:e4b`
+- A model served over an OpenAI-compatible API, with at least 3 billion
+  parameters: smaller ones write wrong commands too often. The default is
+  `gemma4:e4b` on [Ollama](https://ollama.com/download): `ollama pull gemma4:e4b`
 
 ## Install
 
