@@ -4,6 +4,8 @@ import shutil
 import urllib.error
 import urllib.request
 
+import pytest
+
 from thetaterm.agent import (
     MAX_REFERENCE_CHARS,
     Agent,
@@ -64,6 +66,32 @@ def test_outside_flags_commands_leaving_cwd():
     assert outside("tar -cf out.tar --directory=/etc .") is not None
     assert outside('echo "$HOME"') is not None
     assert outside("sudo ls") is not None
+    # the review's misses: home or previous directory, other variables, disks,
+    # paths glued to a short option
+    for command in (
+        "cd && rm -rf *",
+        "cd; ls",
+        "cd - && ls",
+        "popd",
+        "cp x $OLDPWD",
+        "rm -rf $TMPDIR/*",
+        'cp x "${XDG_CONFIG_HOME}/y"',
+        "dd if=x.iso of=/dev/disk4 bs=4m",
+        "tar -xf a.tar -C/tmp",
+        "git -C.. status",
+    ):
+        assert outside(command) is not None, command
+    # the command's own variables, quoted awk fields and harmless devices pass
+    for command in (
+        "cd src && ls",
+        'for f in *.txt; do mv "$f" "$f.bak"; done',
+        "ls | while read -r name; do echo $name; done",
+        "n=3; head -n $n notes.txt",
+        "awk '{print $NF}' notes.txt",
+        "ps -u $USER",
+        "head -c 10 /dev/urandom > key.bin",
+    ):
+        assert outside(command) is None, command
 
 
 def test_excerpt_keeps_whole_entries_and_prefers_rare_words():
@@ -131,6 +159,20 @@ def test_ask_drops_reasoning_effort_if_server_rejects_it(monkeypatch):
     assert agent.ask("hi") == "ls"
     assert agent.ask("hi") == "ls"  # remembered: no second rejected request
     assert ["reasoning_effort" in body for body in sent] == [True, False, False]
+
+
+def test_ask_turns_unexpected_replies_into_runtime_errors(monkeypatch):
+    agent = Agent.__new__(Agent)
+    agent.model, agent.url, agent.headers = "m", "http://x/chat/completions", {}
+    agent.thinking, agent.thinking_off = False, {}
+    for body in (b"<html>", b'{"error": "overloaded"}', b'{"choices": []}', b"[]"):
+        monkeypatch.setattr(
+            urllib.request,
+            "urlopen",
+            lambda request, timeout, body=body: io.BytesIO(body),
+        )
+        with pytest.raises(RuntimeError):
+            agent.ask("hi")
 
 
 def test_choose_takes_the_first_installed_suggestion():

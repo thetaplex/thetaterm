@@ -28,26 +28,42 @@ LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
 
 def process_query(agent: Agent, query: str, yes: bool) -> int:
     """Generate a command for the query, confirm it, run it. Returns its exit code."""
-    with console.status("thinking…"):
-        try:
+    try:
+        with console.status("thinking…"):
             command = agent.generate(query)
-        except RuntimeError as e:
-            console.print(f"[red]{e}[/red]")
-            return 1
+    except RuntimeError as e:
+        console.print(str(e), style="red", markup=False)
+        return 1
+    except KeyboardInterrupt:  # back to the > prompt, no traceback
+        return 130
 
-    console.print(f"[cyan]$ {command}[/cyan]")
+    # markup=False: `grep [abc] f` must show its brackets, and `[conceal]` mustn't
+    # hide words, or the command you approve isn't the one that runs
+    console.print(f"$ {command}", style="cyan", markup=False)
     reason = outside(command)
     if reason:
         # never auto-run these, even with -y, and default to no
-        console.print(f"[red]leaves the current directory: {reason}[/red]")
+        console.print(
+            f"leaves the current directory: {reason}", style="red", markup=False
+        )
     if (reason or not yes) and not typer.confirm("Run it?", default=not reason):
         return 0
-    return subprocess.run(command, shell=True, executable=SHELL, check=False).returncode
+    try:
+        return subprocess.run(
+            command, shell=True, executable=SHELL, check=False
+        ).returncode
+    except KeyboardInterrupt:  # Ctrl-C stops the command, not the session
+        return 130
 
 
 @app.command()
 def tterm(
-    query: Annotated[str | None, typer.Option("--query", "-q")] = None,
+    query: Annotated[
+        str | None,
+        typer.Option(
+            "--query", "-q", help="The request; without it, start interactive mode"
+        ),
+    ] = None,
     model: Annotated[
         str, typer.Option("--model", "-m", envvar="THETATERM_MODEL")
     ] = DEFAULT_MODEL,
@@ -59,7 +75,7 @@ def tterm(
     ] = False,
 ):
     """
-    Thetaterm supercharges your terminal with AI
+    Describe a task in plain words, get a shell command for this system, confirm, run it.
     """
     base_url = os.getenv("THETATERM_BASE_URL") or DEFAULT_BASE_URL
     api_key = os.getenv("THETATERM_API_KEY")

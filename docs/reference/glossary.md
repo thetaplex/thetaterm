@@ -19,7 +19,7 @@ Their options differ.
 **Chosen command**: The program the request is built around, such as `find`. The model suggests
 up to five, and Thetaterm takes the first one installed.
 
-**Reference**: The parts of the chosen command's man page (or `--help` output) that best
+**Reference**: The parts of the chosen command's man page that best
 match the request, put in the prompt.
 _Avoid:_ context, docs.
 
@@ -27,8 +27,8 @@ _Avoid:_ context, docs.
 and every program it calls is installed.
 _Avoid:_ validation, safety check (the checks don't judge safety).
 
-**Outside the current directory**: A command that names `sudo`, `$HOME`, or a path that's absolute, under `~`,
-or contains `..`. These always ask, defaulting to no.
+**Outside the current directory**: A command that names `sudo`, a variable, a bare `cd`, `cd -` or `popd`, or a
+path that's absolute, under `~`, or contains `..`. These always ask, defaulting to no.
 
 **Model server**: The program serving the model over an OpenAI-compatible API, such as Ollama.
 _Avoid:_ backend, provider.

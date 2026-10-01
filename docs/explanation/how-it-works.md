@@ -36,10 +36,10 @@ particular system.
 splits it into paragraphs and option entries. It keeps the NAME and SYNOPSIS,
 then the entries that share the most words with your request, with rare words
 counting more than common ones. It stops at 3,500 characters, so a small
-model's context isn't flooded. If there's no man page and you named the
-program in your request, Thetaterm reads its `--help` output instead. It
-doesn't run `--help` on programs you didn't name, because not every program
-handles that flag safely.
+model's context isn't flooded. If there's no man page, the model gets no
+reference. Thetaterm never runs a program to read its docs, such as with
+`--help`, because not every program honours that flag
+([ADR 0005](../adr/0005-never-run-a-program-to-read-its-docs.md)).
 
 **Write the command.** The model gets the system line, the excerpt and your
 request, and is told to answer with one command, using real paths rather than
