@@ -7,6 +7,11 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### Changed
+
+- Releases on PyPI come with provenance attestations linking each file to the
+  GitHub workflow that built it.
+
 ## [0.1.1] - 2026-10-01
 
 ### Added
