@@ -7,6 +7,10 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### Added
+
+- `tterm --version` (`-V`) prints the installed version.
+
 ### Changed
 
 - Releases on PyPI come with provenance attestations linking each file to the
