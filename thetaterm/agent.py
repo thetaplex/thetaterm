@@ -39,6 +39,10 @@ STOPWORDS = set(_STOPWORDS.split())
 PREFIXES = {"sudo", "env", "time", "nohup", "command", "!"}
 MAX_REFERENCE_CHARS = 3500
 RETRIES = 2
+# devices that hold no files; anything else under /dev (disks) counts as outside
+SAFE_DEVICE = re.compile(r"/dev/(null|zero|u?random|tty|std(in|out|err)|fd/\d+)")
+# variables that can't name a directory
+SAFE_VARIABLES = {"PWD", "USER", "LOGNAME", "UID", "RANDOM", "IFS"}
 
 
 def sh(args: list[str], timeout: int = 10) -> subprocess.CompletedProcess:
@@ -84,13 +88,13 @@ def keywords(query: str) -> list[str]:
     ]
 
 
-def reference(command: str, query: str, named: bool) -> str:
-    """The parts of a command's docs relevant to the query."""
+def reference(command: str, query: str) -> str:
+    """The parts of a command's man page relevant to the query.
+
+    Never `command --help`: a program that doesn't honour it would run before
+    the user agreed to anything (ADR 0005).
+    """
     text = re.sub(r".\x08", "", sh(["man", command]).stdout)  # strip overstrike bold
-    if not text.strip() and named:
-        # only run --help on commands the user named; arbitrary binaries may not honour it
-        r = sh([command, "--help"], timeout=5)
-        text = r.stdout or r.stderr
     return excerpt(text, query)
 
 
@@ -172,18 +176,38 @@ def outside(command: str) -> str | None:
     ponytail: pattern match on the words, catches the model's honest mistakes, not
     obfuscation (`cat $(printf '\\x2f')etc`); a real sandbox if that matters.
     """
-    for token in tokens(command):
-        path = token.split("=", 1)[-1]  # --output=/tmp/x
+    words = tokens(command)
+    for i, token in enumerate(words):
+        # --output=/tmp/x, of=/dev/sda, -C/tmp
+        path = re.sub(r"^-[A-Za-z]", "", token.split("=", 1)[-1])
         if token == "sudo":
             return "runs as root"
-        if "$HOME" in token or "${HOME" in token:
-            return "uses $HOME"
+        # bare `cd` goes home, `cd -` and `popd` go back to an earlier directory
+        target = words[i + 1] if i + 1 < len(words) else ";"
+        if token in {"cd", "pushd", "popd"} and target in {
+            "-",
+            ";",
+            "&&",
+            "||",
+            "&",
+            ")",
+        }:
+            return f"{token} leaves for the home or previous directory"
         if path.startswith("~"):
             return f"home path {token}"
-        if path.startswith("/") and not path.startswith("/dev/"):
+        if path.startswith("/") and not SAFE_DEVICE.fullmatch(path):
             return f"absolute path {token}"
         if ".." in path.split("/"):
             return f"parent path {token}"
+    # any variable may hold a path; single quotes don't expand, loop and read
+    # variables are the command's own
+    unquoted = re.sub(r"'[^']*'", "", command)
+    own = set(re.findall(r"\bfor\s+(\w+)\s+in\b", unquoted))
+    own |= set(re.findall(r"\bread\s+(?:-\w+\s+)*(\w+)", unquoted))
+    own |= set(re.findall(r"(?:^|[\s;&|(])([A-Za-z_]\w*)=", unquoted))
+    for name in re.findall(r"\$\{?([A-Za-z_]\w*)", unquoted):
+        if name not in own | SAFE_VARIABLES:
+            return f"uses ${name}"
     return None
 
 
@@ -248,7 +272,7 @@ class Agent:
         )
         try:
             with urllib.request.urlopen(request, timeout=300) as r:
-                return json.load(r)["choices"][0]["message"]["content"] or ""
+                reply = json.load(r)
         except urllib.error.HTTPError as e:
             detail = e.read().decode()[:200]
             if e.code == 400 and self.thinking_off and "reasoning" in detail:
@@ -257,6 +281,15 @@ class Agent:
             raise RuntimeError(f"{self.url}: {e.code} {detail}")
         except OSError as e:
             raise RuntimeError(f"cannot reach {self.url}: {getattr(e, 'reason', e)}")
+        except ValueError:
+            raise RuntimeError(f"{self.url}: reply is not JSON") from None
+        try:
+            return reply["choices"][0]["message"]["content"] or ""
+        except (KeyError, IndexError, TypeError):
+            # some servers answer 200 with {"error": ...}
+            raise RuntimeError(
+                f"{self.url}: unexpected reply {json.dumps(reply)[:200]}"
+            ) from None
 
     def choose(self, query: str) -> str | None:
         """The main command for the task: the model suggests, the OS confirms."""
@@ -280,7 +313,7 @@ class Agent:
         # round trip and man page only slow it down (evals: 49/50 vs 48/50)
         chosen = None if self.thinking else self.choose(query)
         if chosen:
-            ref = reference(chosen, query, named=chosen in keywords(query))
+            ref = reference(chosen, query)
             prompt += f"\nReference for `{chosen}` on this system:\n{ref}\n"
         prompt += (
             f"\nTask: {query}\nWrite one {os.path.basename(SHELL)} command for this system. "

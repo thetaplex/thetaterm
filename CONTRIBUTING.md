@@ -1,10 +1,10 @@
 # Contributing
 
-Thanks for helping. By taking part you agree to the thetaplex
+Thanks for helping. By taking part you agree to the ThetaPlex
 [Code of Conduct](https://github.com/thetaplex/.github/blob/main/CODE_OF_CONDUCT.md).
 Report security issues privately, as described in [SECURITY.md](SECURITY.md).
 
-Thetaterm is maintained by the [thetaplex](https://github.com/thetaplex)
+Thetaterm is maintained by the [ThetaPlex](https://github.com/thetaplex)
 organization, which enforces the Code of Conduct. Reach it at
 support@thetaplex.com.
 

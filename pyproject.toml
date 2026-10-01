@@ -3,6 +3,9 @@ name = "thetaterm"
 version = "0.1.0"
 description = "Supercharge your terminal with AI"
 readme = "README.md"
+authors = [{ name = "ThetaPlex", email = "support@thetaplex.com" }]
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
 requires-python = ">=3.13"
 dependencies = [
     "python-dotenv>=1.2.3",
@@ -17,6 +20,12 @@ dev = [
     "pytest>=8.4.1",
     "ruff>=0.16.9",
 ]
+
+[project.urls]
+Repository = "https://github.com/thetaplex/thetaterm"
+Documentation = "https://github.com/thetaplex/thetaterm/tree/main/docs"
+Issues = "https://github.com/thetaplex/thetaterm/issues"
+Changelog = "https://github.com/thetaplex/thetaterm/blob/main/CHANGELOG.md"
 
 [project.scripts]
 tterm = "thetaterm.cli:app"

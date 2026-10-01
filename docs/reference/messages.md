@@ -29,6 +29,15 @@ server's own message.
 | `400` | the server rejected the request | check that the server supports `/chat/completions` |
 | `5xx` | the server failed | check the server's log |
 
+### `<url>: reply is not JSON` or `<url>: unexpected reply …`
+
+The server answered, but not with an OpenAI-style chat completion. Some
+servers report errors this way, with the error in the text that follows.
+
+- Check that `THETATERM_BASE_URL` points at the API, usually ending in `/v1`,
+  not at a web page.
+- If the reply shows an error, act on it as you would for an HTTP error above.
+
 ### ``no working command found (last: `<command>`: <reason>)``
 
 The model's answer failed the checks three times. The reason is the last
@@ -54,9 +63,10 @@ It's shown in red, and the prompt defaults to no, even with `-y`.
 | Reason | Triggered by |
 |---|---|
 | `runs as root` | `sudo` |
-| `uses $HOME` | `$HOME` or `${HOME}` |
+| `cd leaves for the home or previous directory` | `cd` with no directory or `-`, `pushd` with no directory, or `popd` |
+| `uses $NAME` | any variable outside single quotes, such as `$HOME` or `${TMPDIR}`, except `$PWD`, `$USER`, `$LOGNAME`, `$UID`, `$RANDOM`, `$IFS` and variables the command sets itself (`for f in`, `read name`, `n=3`) |
 | `home path …` | a path starting with `~` |
-| `absolute path …` | a path starting with `/`, except `/dev/…` |
+| `absolute path …` | a path starting with `/`, including one after `=` or a short option (`-C/tmp`), except `/dev/null`, `/dev/zero`, `/dev/random`, `/dev/urandom`, `/dev/tty`, `/dev/stdin`, `/dev/stdout`, `/dev/stderr` and `/dev/fd/N` |
 | `parent path …` | a path containing `..` |
 
 Read the command before you answer. Declining is safe: nothing runs.

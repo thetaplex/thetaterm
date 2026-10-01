@@ -54,6 +54,7 @@ runs in the current directory. See
 | `1` | `-q`: no command was produced (server unreachable, server error, or no command passed the checks) |
 | `1` | you pressed Ctrl-D or Ctrl-C at `Run it?`. Thetaterm prints `Aborted.` and exits, in interactive mode too |
 | `2` | invalid option or argument |
+| `130` | `-q`: you pressed Ctrl-C while the model was thinking or the command was running. Interactive: the same stops that request and returns to the `>` prompt |
 
 ## Settings
 
@@ -84,4 +85,4 @@ repository's [`.env.example`](../../.env.example) lists every setting.
 | Time allowed per model request | 300 s |
 | Attempts to produce a command that passes the checks | 3 |
 | Man page excerpt size | 3,500 characters |
-| Time allowed for a `man` or `--help` lookup | 10 s and 5 s |
+| Time allowed for a `man` lookup | 10 s |

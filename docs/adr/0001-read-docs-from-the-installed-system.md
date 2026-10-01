@@ -6,6 +6,9 @@ Date: 2026-09-30
 
 Accepted
 
+Amended by [ADR 0005](0005-never-run-a-program-to-read-its-docs.md):
+no `--help` fallback.
+
 ## Context
 
 Thetaterm is meant to work with small models that run on a laptop. They know

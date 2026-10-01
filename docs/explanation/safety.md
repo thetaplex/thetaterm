@@ -20,8 +20,8 @@ command is safe.** `rm -rf .` passes them.
 ## The outside-the-current-directory guard
 
 Most requests are about the directory you're in. A command that reaches
-further, through `sudo`, `$HOME`, or a path that's absolute, under `~` or
-contains `..`, is more likely to be a mistake and more likely to do damage. So
+further, through `sudo`, a variable such as `$HOME`, a bare `cd` or `cd -`,
+or a path that's absolute, under `~` or contains `..`, is more likely to be a mistake and more likely to do damage. So
 Thetaterm:
 
 - shows it in red with the reason
@@ -31,8 +31,13 @@ Thetaterm:
 The guard only reads the words of the command, so it's a pattern match, not a
 sandbox. It catches the model's honest mistakes, such as writing `/tmp/out`
 when you meant `./out`. It won't catch a command built to hide where it reaches,
-for example a path assembled at run time by `$(…)`. Once a command runs, it has
-all the permissions you have. See
+for example a path assembled at run time by `$(…)`. The full list of patterns
+is in [Messages](../reference/messages.md). Once a command runs, it has all the
+permissions you have.
+
+Nothing runs before you answer the prompt. Thetaterm reads man pages to help
+the model, but it never runs a program to read its docs
+([ADR 0005](../adr/0005-never-run-a-program-to-read-its-docs.md)). See
 [ADR 0002](../adr/0002-check-outside-paths-by-pattern-not-sandbox.md) for why
 it's built this way.
 

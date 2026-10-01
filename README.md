@@ -55,7 +55,7 @@ tterm --think -q "show the date 30 days from now"   # model reasons first, about
 > check.
 
 Commands that look like they reach outside the current directory (absolute,
-`~`, `$HOME` or `..` paths, or `sudo`) are shown in red and always ask first,
+`~` or `..` paths, variables such as `$HOME`, `cd` home or back, or `sudo`) are shown in red and always ask first,
 defaulting to no, even with `-y`. This is a pattern match, not a sandbox. See
 the [safety model](docs/explanation/safety.md).
 
