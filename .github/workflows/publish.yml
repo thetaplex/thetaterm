@@ -26,4 +26,6 @@ jobs:
       # a PyPI version can't be re-uploaded, so refuse a tag that disagrees with pyproject.toml
       - run: test "${GITHUB_REF_NAME#v}" = "$(uv version --short)"
       - run: uv build
-      - run: uv publish
+      # not `uv publish`: this also uploads attestations, so PyPI can show the
+      # files were built by this workflow from this repo
+      - uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33  # v1.14.2
