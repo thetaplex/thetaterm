@@ -1,18 +1,18 @@
 # Safety model
 
-Thetaterm runs commands a language model writes. Models make mistakes, and a
+thetaterm runs commands a language model writes. Models make mistakes, and a
 wrong shell command can delete or overwrite files. This page explains what
 protects you, and where that protection stops.
 
 ## You are the safeguard
 
-The main protection is you reading the command before you answer. Thetaterm
+The main protection is you reading the command before you answer. thetaterm
 always shows the full command and, unless you pass `-y`, waits for your
 answer. Nothing else on this page replaces that.
 
 ## What the checks do
 
-Before you see a command, Thetaterm checks that it's valid shell syntax and
+Before you see a command, thetaterm checks that it's valid shell syntax and
 that every program it calls is installed. These checks exist to catch commands
 that can't work, so the model can try again. **They don't judge whether a
 command is safe.** `rm -rf .` passes them.
@@ -22,7 +22,7 @@ command is safe.** `rm -rf .` passes them.
 Most requests are about the directory you're in. A command that reaches
 further, through `sudo`, a variable such as `$HOME`, a bare `cd` or `cd -`,
 or a path that's absolute, under `~` or contains `..`, is more likely to be a mistake and more likely to do damage. So
-Thetaterm:
+thetaterm:
 
 - shows it in red with the reason
 - makes the default answer no
@@ -35,7 +35,7 @@ for example a path assembled at run time by `$(…)`. The full list of patterns
 is in [Messages](../reference/messages.md). Once a command runs, it has all the
 permissions you have.
 
-Nothing runs before you answer the prompt. Thetaterm reads man pages to help
+Nothing runs before you answer the prompt. thetaterm reads man pages to help
 the model, but it never runs a program to read its docs
 ([ADR 0005](../adr/0005-never-run-a-program-to-read-its-docs.md)). See
 [ADR 0002](../adr/0002-check-outside-paths-by-pattern-not-sandbox.md) for why

@@ -1,6 +1,6 @@
 # How to use another model server
 
-Thetaterm works with any server that offers the OpenAI-compatible
+thetaterm works with any server that offers the OpenAI-compatible
 `/chat/completions` endpoint. This page shows how to point it at one.
 
 ## Set the endpoint and model
@@ -9,7 +9,7 @@ Thetaterm works with any server that offers the OpenAI-compatible
 
    | Server | Base URL |
    |---|---|
-   | Ollama | `http://localhost:11434/v1` (Thetaterm's default) |
+   | Ollama | `http://localhost:11434/v1` (thetaterm's default) |
    | llama.cpp (`llama-server`) | `http://localhost:8080/v1` |
    | LM Studio | `http://localhost:1234/v1` |
    | vLLM | `http://localhost:8000/v1` |
@@ -56,7 +56,7 @@ excerpts from your man pages are sent to that provider.
    ```
 
 Use an `https://` URL. If you set a key with a plain `http://` URL that isn't
-`localhost`, Thetaterm warns that the key is sent unencrypted.
+`localhost`, thetaterm warns that the key is sent unencrypted.
 
 ## If it doesn't work
 

@@ -175,6 +175,12 @@ def test_ask_turns_unexpected_replies_into_runtime_errors(monkeypatch):
             agent.ask("hi")
 
 
+def test_base_url_must_be_http_or_https():
+    for url in ("file:///etc", "ftp://example.com", "localhost:11434"):
+        with pytest.raises(ValueError):
+            Agent("m", url)
+
+
 def test_choose_takes_the_first_installed_suggestion():
     agent = Agent("m", "http://localhost")
     agent.ask = lambda prompt, max_tokens=None: (

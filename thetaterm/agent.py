@@ -16,6 +16,7 @@ import shutil
 import subprocess
 import urllib.error
 import urllib.request
+from urllib.parse import urlsplit
 
 # problem() and outside() read commands as sh words, so only shells that parse like sh
 POSIX_SHELLS = {"sh", "bash", "zsh", "ksh", "dash"}
@@ -48,7 +49,7 @@ SAFE_VARIABLES = {"PWD", "USER", "LOGNAME", "UID", "RANDOM", "IFS"}
 def sh(args: list[str], timeout: int = 10) -> subprocess.CompletedProcess:
     env = os.environ | {"PAGER": "cat", "MANPAGER": "cat", "MANWIDTH": "100"}
     try:
-        return subprocess.run(
+        return subprocess.run(  # noqa: S603 an argv list, no shell
             args, capture_output=True, text=True, timeout=timeout, env=env, check=False
         )
     except (OSError, subprocess.TimeoutExpired) as e:
@@ -180,7 +181,7 @@ def outside(command: str) -> str | None:
     for i, token in enumerate(words):
         # --output=/tmp/x, of=/dev/sda, -C/tmp
         path = re.sub(r"^-[A-Za-z]", "", token.split("=", 1)[-1])
-        if token == "sudo":
+        if token == "sudo":  # noqa: S105 a shell word, not a password
             return "runs as root"
         # bare `cd` goes home, `cd -` and `popd` go back to an earlier directory
         target = words[i + 1] if i + 1 < len(words) else ";"
@@ -247,6 +248,9 @@ class Agent:
         api_key: str | None = None,
         thinking: bool = False,
     ):
+        # urlopen also reads file: and ftp: URLs; only talk to a server
+        if urlsplit(base_url).scheme not in {"http", "https"}:
+            raise ValueError(f"{base_url}: not an http(s) URL")
         self.model = model
         self.url = base_url.rstrip("/") + "/chat/completions"
         self.headers = {"Content-Type": "application/json"}
@@ -267,11 +271,11 @@ class Agent:
         # reasoning counts against max_tokens, so a cap would cut thinking short
         if max_tokens and not self.thinking:
             body["max_tokens"] = max_tokens
-        request = urllib.request.Request(
+        request = urllib.request.Request(  # noqa: S310 scheme checked in __init__
             self.url, json.dumps(body).encode(), self.headers
         )
         try:
-            with urllib.request.urlopen(request, timeout=300) as r:
+            with urllib.request.urlopen(request, timeout=300) as r:  # noqa: S310 scheme checked in __init__
                 reply = json.load(r)
         except urllib.error.HTTPError as e:
             detail = e.read().decode()[:200]

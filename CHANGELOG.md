@@ -7,6 +7,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-01
+
 ### Added
 
 - `tterm --version` (`-V`) prints the installed version.
@@ -15,6 +17,11 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 - Releases on PyPI come with provenance attestations linking each file to the
   GitHub workflow that built it.
+
+### Security
+
+- `THETATERM_BASE_URL` must be an `http` or `https` URL; `file:` and other
+  schemes are refused instead of read.
 
 ## [0.1.1] - 2026-10-01
 
@@ -48,6 +55,7 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Documentation in `docs/`: a tutorial, how-to guides, reference, explanation
   and architecture decision records.
 
-[Unreleased]: https://github.com/thetaplex/thetaterm/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/thetaplex/thetaterm/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/thetaplex/thetaterm/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/thetaplex/thetaterm/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/thetaplex/thetaterm/releases/tag/v0.1.0

@@ -50,7 +50,7 @@ def process_query(agent: Agent, query: str, yes: bool) -> int:
     if (reason or not yes) and not typer.confirm("Run it?", default=not reason):
         return 0
     try:
-        return subprocess.run(
+        return subprocess.run(  # noqa: S602 running the approved command is the point
             command, shell=True, executable=SHELL, check=False
         ).returncode
     except KeyboardInterrupt:  # Ctrl-C stops the command, not the session
@@ -101,11 +101,15 @@ def tterm(
         console.print(
             f"[yellow]warning: API key sent unencrypted to {base_url}[/yellow]"
         )
-    agent = Agent(model, base_url, api_key, think)
+    try:
+        agent = Agent(model, base_url, api_key, think)
+    except ValueError as e:
+        console.print(f"THETATERM_BASE_URL={e}", style="red", markup=False)
+        sys.exit(2)
     if query is not None:
         sys.exit(process_query(agent, query, yes))
 
-    console.print(f"[bold cyan]Thetaterm[/bold cyan] · {model} · {agent.env}")
+    console.print(f"[bold cyan]thetaterm[/bold cyan] · {model} · {agent.env}")
     console.print("[dim]Describe what you want. Ctrl-D to exit.[/dim]")
     while True:
         try:

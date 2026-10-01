@@ -1,6 +1,6 @@
 [project]
 name = "thetaterm"
-version = "0.1.1"
+version = "0.2.0"
 description = "Supercharge your terminal with AI"
 readme = "README.md"
 authors = [{ name = "ThetaPlex", email = "support@thetaplex.com" }]
@@ -52,3 +52,10 @@ build-backend = "uv_build"
 
 [tool.uv.build-backend]
 module-root = ""
+
+[tool.ruff.lint]
+# S: Bandit's security checks, the local stand-in for CodeQL's Python scan
+extend-select = ["S"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
