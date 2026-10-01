@@ -16,6 +16,7 @@ import shutil
 import subprocess
 import urllib.error
 import urllib.request
+from importlib.resources import files
 from urllib.parse import urlsplit
 
 # problem() and outside() read commands as sh words, so only shells that parse like sh
@@ -39,6 +40,8 @@ STOPWORDS = set(_STOPWORDS.split())
 # `!` negates a pipeline in command position; elsewhere (find ! -name) it is an argument
 PREFIXES = {"sudo", "env", "time", "nohup", "command", "!"}
 MAX_REFERENCE_CHARS = 3500
+# a note leaves most of the reference to the man page
+MAX_NOTE_CHARS = 600
 RETRIES = 2
 # devices that hold no files; anything else under /dev (disks) counts as outside
 SAFE_DEVICE = re.compile(r"/dev/(null|zero|u?random|tty|std(in|out|err)|fd/\d+)")
@@ -89,14 +92,22 @@ def keywords(query: str) -> list[str]:
     ]
 
 
+def note(command: str) -> str:
+    """Our note on what the command's man page excerpt tends to miss (ADR 0006)."""
+    path = files("thetaterm") / "notes" / f"{command}.md"
+    return path.read_text().strip() if path.is_file() else ""
+
+
 def reference(command: str, query: str) -> str:
-    """The parts of a command's man page relevant to the query.
+    """The command's note, then the parts of its man page relevant to the query.
 
     Never `command --help`: a program that doesn't honour it would run before
     the user agreed to anything (ADR 0005).
     """
+    head = note(command)
+    head = f"Notes:\n{head}\n\n" if head else ""
     text = re.sub(r".\x08", "", sh(["man", command]).stdout)  # strip overstrike bold
-    return excerpt(text, query)
+    return head + excerpt(text, query, MAX_REFERENCE_CHARS - len(head))
 
 
 def entries(text: str) -> list[tuple[int, str]]:
@@ -128,7 +139,7 @@ def entries(text: str) -> list[tuple[int, str]]:
     return found
 
 
-def excerpt(text: str, query: str) -> str:
+def excerpt(text: str, query: str, budget: int = MAX_REFERENCE_CHARS) -> str:
     """Whole entries that best match the query, rare words counting most."""
     chunks = entries(text)
     words = set(keywords(query))
@@ -145,7 +156,7 @@ def excerpt(text: str, query: str) -> str:
     # stable sort: ties go to whatever comes first on the page
     for i in sorted(range(len(chunks)), key=score, reverse=True):
         size = len(chunks[i][1]) + 1
-        if score(i) and used + size <= MAX_REFERENCE_CHARS:
+        if score(i) and used + size <= budget:
             keep.add(i)
             used += size
     return "\n".join(chunks[i][1] for i in sorted(keep))

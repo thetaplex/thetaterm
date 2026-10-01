@@ -41,6 +41,11 @@ reference. thetaterm never runs a program to read its docs, such as with
 `--help`, because not every program honours that flag
 ([ADR 0005](../adr/0005-never-run-a-program-to-read-its-docs.md)).
 
+Some programs also have a short note that ships with thetaterm, for facts the
+excerpt tends to miss, such as `awk` splitting fields on spaces, not commas.
+The note goes first and shares the 3,500 characters with the excerpt
+([ADR 0006](../adr/0006-put-a-short-note-before-the-man-page-excerpt.md)).
+
 **Write the command.** The model gets the system line, the excerpt and your
 request, and is told to answer with one command, using real paths rather than
 placeholders, and the current directory when you didn't name one. thetaterm

@@ -84,5 +84,6 @@ repository's [`.env.example`](../../.env.example) lists every setting.
 |---|---|
 | Time allowed per model request | 300 s |
 | Attempts to produce a command that passes the checks | 3 |
-| Man page excerpt size | 3,500 characters |
+| Reference size: note plus man page excerpt | 3,500 characters |
+| Note size | 600 characters |
 | Time allowed for a `man` lookup | 10 s |

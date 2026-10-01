@@ -1,12 +1,17 @@
 import io
 import json
+import re
 import shutil
 import urllib.error
 import urllib.request
+from importlib.resources import files
+from types import SimpleNamespace
 
 import pytest
 
+from thetaterm import agent
 from thetaterm.agent import (
+    MAX_NOTE_CHARS,
     MAX_REFERENCE_CHARS,
     Agent,
     clean,
@@ -122,6 +127,34 @@ def test_excerpt_keeps_whole_entries_and_prefers_rare_words():
     )
     assert "  -q  quiet" not in out  # option lines split without blank lines
     assert len(out) <= MAX_REFERENCE_CHARS
+
+
+def test_reference_puts_the_note_first_within_the_same_budget(monkeypatch):
+    page = "\n\n".join(f"     -{c}  search {'x' * 900}" for c in "abcdef")
+    monkeypatch.setattr(agent, "sh", lambda args: SimpleNamespace(stdout=page))
+    monkeypatch.setattr(agent, "note", lambda command: "Fields split on spaces.")
+    out = agent.reference("awk", "search")
+    assert out.startswith("Notes:\nFields split on spaces.\n\n")
+    assert "-a  search" in out
+    assert len(out) <= MAX_REFERENCE_CHARS
+
+
+def test_reference_without_a_man_page_is_just_the_note(monkeypatch):
+    monkeypatch.setattr(agent, "sh", lambda args: SimpleNamespace(stdout=""))
+    assert agent.reference("awk", "q").startswith("Notes:\n")
+    assert agent.reference("no_such_command_xyz", "q") == ""
+
+
+def test_shipped_notes_are_short_facts_not_examples():
+    notes = list((files("thetaterm") / "notes").iterdir())
+    assert notes
+    for path in notes:
+        assert path.name.endswith(".md")
+        text = path.read_text().strip()
+        assert 0 < len(text) <= MAX_NOTE_CHARS, path.name
+        # an example command is an answer the model copies (ADR 0006)
+        program = path.name.removesuffix(".md")
+        assert not re.search(rf"\b{program}\s+-|[|`]|'\{{", text), path.name
 
 
 def test_entries_keep_an_options_indented_paragraphs():

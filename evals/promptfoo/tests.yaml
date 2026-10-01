@@ -9,8 +9,14 @@
 
 - vars: { query: find files modified in the last 2 days }
   assert:
-    - type: regex
-      value: '\bfind\b.*-(mtime|mmin|newermt)\b'
+    # -mtime +2 is older than 2 days; a path other than . searches somewhere else
+    - type: python
+      value: |
+        import re
+        root = re.search(r"\bfind\s+([^-\s]\S*)", output)
+        here = not root or root[1].rstrip("/") == "."
+        recent = re.search(r"-mtime\s+-2d?\b|-mmin\s+-2880\b|-newermt\b", output)
+        return bool(here and recent)
 
 - vars: { query: list all files including hidden ones }
   assert:
@@ -36,6 +42,9 @@
   assert:
     - type: regex
       value: '\b(ls|find)\b.*\|\s*wc\s+-l'
+    # ls -l adds a "total" line, so the count is one too many
+    - type: not-regex
+      value: '\bls\s+(-\w*\s+)*-\w*l'
 
 - vars: { query: list the 5 largest files in this directory }
   assert:
@@ -61,10 +70,14 @@
   assert:
     - type: python
       value: |
-        # zmv: zsh's batch rename
-        return "jpeg" in output and "jpg" in output and bool(
-            __import__("re").search(r"\b(mv|zmv|rename)\b", output)
+        import re
+        # every .jpeg file, not one named .jpeg
+        every = re.search(r"\*\.jpeg|\(\*\)\.jpeg", output)
+        # the old extension removed, not photo.jpeg.jpg; zmv is zsh's batch rename
+        strips = re.search(
+            r"%\.jpeg|%\.\*|\bbasename\b|\$1\.jpg|\bs/|\bsed\b|/\.jpeg/|\brename\s+\.jpeg\s+\.jpg", output
         )
+        return bool(every and strips and re.search(r"\b(mv|zmv|rename)\b", output))
 
 - vars: { query: find broken symlinks in the current directory }
   assert:
@@ -82,7 +95,8 @@
 - vars: { query: find files named config.yaml anywhere under my home directory }
   assert:
     - type: regex
-      value: '(\bfind\s+("?\$HOME"?|~)\S*\s.*-i?name\s+[''"]?config\.yaml|\b(mdfind|locate)\b.*config\.yaml)'
+      # all of home, not a folder inside it such as ~/.config
+      value: '(\bfind\s+("?\$\{?HOME\}?"?|~)/?\s.*-i?name\s+[''"]?config\.yaml|\b(mdfind|locate)\b.*config\.yaml)'
 
 - vars: { query: compare file1.txt and file2.txt }
   assert:
@@ -98,8 +112,12 @@
 
 - vars: { query: show free space on all mounted disks }
   assert:
-    - type: regex
-      value: '\bdf\b'
+    # a path argument shows only the disk that holds it
+    - type: python
+      value: |
+        import re
+        df = re.search(r"\bdf\b([^|;&]*)", output)
+        return bool(df) and all(arg.startswith("-") for arg in df[1].split())
 
 - vars: { query: show the size of each subdirectory in the current directory }
   assert:
@@ -113,8 +131,9 @@
 
 - vars: { query: extract archive.tar.gz }
   assert:
+    # without -f, tar reads standard input, not the archive
     - type: regex
-      value: '\btar\b\s+-?\w*x.*archive\.tar\.gz|\bg(un)?zip\b\s+-\w*[dc].*archive\.tar\.gz.*\|\s*tar\b\s+-?\w*x'
+      value: '\btar\b\s+(-?\w*x.*\s-?\w*f|-?\w*x\w*f)\s*archive\.tar\.gz|\bg(un)?zip\b\s+-\w*[dc].*archive\.tar\.gz.*\|\s*tar\b\s+-?\w*x'
 
 - vars: { query: list the files inside archive.tar.gz without extracting it }
   assert:
@@ -189,6 +208,9 @@
     # sort | uniq -c, or counting in awk; either way a numeric reverse sort then head
     - type: regex
       value: '(\bsort\b.*\|\s*uniq\s+-c|\bawk\b.*(\[\$0\]\+\+|\+\+\w+\[\$0\])).*\bsort\s+(-\w*(nr|rn)\w*|-n\s+-r|-r\s+-n).*\|\s*head'
+    # whole lines, not one field of them
+    - type: not-regex
+      value: '\$[1-9]|\bcut\b'
 
 - vars: { query: count how many lines in app.log contain error }
   assert:
@@ -204,9 +226,13 @@
     - type: python
       value: |
         import re
-        return "notes.md" in output and bool(
-            re.search(r"\btr\b.*(upper|A-Z).*(lower|a-z)", output) or "tolower" in output
-        )
+        # the file's contents: not a $notes variable, not the echoed name
+        reads = re.search(r"(?<![$\w])notes\.md", output) and not re.search(r"\becho\b[^|]*notes\.md", output)
+        tr = re.search(r"\btr\b.*(upper|A-Z).*(lower|a-z)", output)
+        # tr reads only standard input; a file argument is an error
+        if tr and not re.search(r"<\s*notes\.md|\bnotes\.md\b[^|]*\|\s*tr\b", output):
+            return False
+        return bool(reads) and bool(tr or "tolower" in output)
 
 - vars: { query: show only the lines of app.log that do not contain DEBUG }
   assert:
@@ -247,6 +273,9 @@
   assert:
     - type: regex
       value: '\b(free|vm_stat|vmstat|top|memory_pressure|sysctl|meminfo)\b'
+    # vm_stat lines read "Pages free: N": fields 1 and 2 are words, not the number
+    - type: not-regex
+      value: '\bvm_stat\b.*\bawk\b.*\$[12]\b'
 
 - vars: { query: show the full path of the python3 executable }
   assert:
