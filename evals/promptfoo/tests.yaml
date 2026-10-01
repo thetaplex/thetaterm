@@ -1,0 +1,329 @@
+# Commands are generated for, but never run on, this machine. Assertions accept
+# any userland unless the task is one where GNU and BSD differ. Tools that exist
+# on only one userland (free, vm_stat, md5sum, md5) need no special casing:
+# generate() rejects commands that are not installed.
+
+# All queries. regression.yaml repeats the ones some model has failed.
+
+# --- files and directories ---
+
+- vars: { query: find files modified in the last 2 days }
+  assert:
+    - type: regex
+      value: '\bfind\b.*-(mtime|mmin|newermt)\b'
+
+- vars: { query: list all files including hidden ones }
+  assert:
+    - type: regex
+      value: '\bls\b.*\s-\w*[aA]'
+
+- vars: { query: find all files larger than 100MB }
+  assert:
+    - type: regex
+      value: '\bfind\b.*-size\s+\+100M'
+
+- vars: { query: delete all .pyc files under the current directory }
+  assert:
+    - type: regex
+      value: '\bfind\b.*\.pyc.*(-delete|\brm\b)'
+
+- vars: { query: make deploy.sh executable }
+  assert:
+    - type: regex
+      value: '\bchmod\b.*(\+x|[0-7]?7[0-7][0-7]).*deploy\.sh'
+
+- vars: { query: count how many files are in the current directory }
+  assert:
+    - type: regex
+      value: '\b(ls|find)\b.*\|\s*wc\s+-l'
+
+- vars: { query: list the 5 largest files in this directory }
+  assert:
+    - type: regex
+      value: '(\bsort\b|\bls\b.*-\w*S)'
+    # reversed ls piped to head gives the smallest
+    - type: not-regex
+      value: '\bls\b.*\s-[a-zA-Z]*r.*\|\s*head'
+    - type: contains
+      value: "5"
+
+- vars: { query: create the directory a/b/c including any missing parents }
+  assert:
+    - type: regex
+      value: '\bmkdir\b.*-p.*a/b/c'
+
+- vars: { query: copy the src directory to backup }
+  assert:
+    - type: regex
+      value: '(\bcp\b\s+-\w*[rRa]|\brsync\b.*-\w*a|\bditto\b).*\bsrc\b.*\bbackup\b'
+
+- vars: { query: rename all .jpeg files in this directory to .jpg }
+  assert:
+    - type: python
+      value: |
+        return "jpeg" in output and "jpg" in output and bool(
+            __import__("re").search(r"\b(mv|rename)\b", output)
+        )
+
+- vars: { query: find broken symlinks in the current directory }
+  assert:
+    # -xtype is GNU only; -L with -type l, or testing each link, works everywhere
+    - type: python
+      value: |
+        import re, subprocess
+        gnu = "GNU" in subprocess.run(["find", "--version"], capture_output=True, text=True).stdout
+        # ! -exec test -e, test ! -e or [ ! -e: without the ! it lists the working links
+        portable = r"\bfind\b.*(-L\b.*-type\s+l|-type\s+l.*(!\s+-exec\s+(test|\[)\s+-e|(test|\[)\s+!\s+-e))"
+        deletes = re.search(r"\brm\b|-delete\b", output)
+        found = re.search(portable, output) or (gnu and re.search(r"-xtype\s+l", output))
+        return bool(found and not deletes)
+
+- vars: { query: find files named config.yaml anywhere under my home directory }
+  assert:
+    - type: regex
+      value: '(\bfind\s+("?\$HOME"?|~)\S*\s.*-i?name\s+[''"]?config\.yaml|\b(mdfind|locate)\b.*config\.yaml)'
+
+- vars: { query: compare file1.txt and file2.txt }
+  assert:
+    - type: regex
+      value: '\b(diff|cmp|comm)\b.*file1\.txt.*file2\.txt'
+
+# --- disk and archives ---
+
+- vars: { query: show disk usage of the current directory }
+  assert:
+    - type: regex
+      value: '\bdu\b'
+
+- vars: { query: show free space on all mounted disks }
+  assert:
+    - type: regex
+      value: '\bdf\b'
+
+- vars: { query: show the size of each subdirectory in the current directory }
+  assert:
+    - type: regex
+      value: '\bdu\b.*(-d\s*1|--max-depth[= ]1|\*)|\bfind\b.*-maxdepth\s+1.*-type\s+d.*\bdu\b'
+
+- vars: { query: compress the logs directory into logs.tar.gz }
+  assert:
+    - type: regex
+      value: '\btar\b.*logs\.tar\.gz.*logs'
+
+- vars: { query: extract archive.tar.gz }
+  assert:
+    - type: regex
+      value: '\btar\b\s+-?\w*x.*archive\.tar\.gz|\bg(un)?zip\b\s+-\w*[dc].*archive\.tar\.gz.*\|\s*tar\b\s+-?\w*x'
+
+- vars: { query: list the files inside archive.tar.gz without extracting it }
+  assert:
+    - type: regex
+      value: '\btar\b\s+-?\w*t.*archive\.tar\.gz'
+
+- vars: { query: unzip bundle.zip into the out directory }
+  assert:
+    - type: regex
+      value: '^(?=.*\bunzip\b)(?=.*bundle\.zip)(?=.*-d\s*\S*\bout\b)'
+
+- vars: { query: show the md5 checksum of image.iso }
+  assert:
+    - type: regex
+      value: '\b(md5sum|md5|openssl\s+(md5|dgst))\b.*image\.iso'
+
+# --- text processing ---
+
+- vars: { query: count lines in README.md }
+  assert:
+    - type: regex
+      value: '\bwc\b.*-l.*README\.md'
+
+- vars: { query: search for TODO in all python files recursively }
+  assert:
+    - type: regex
+      value: '\b(grep|rg)\b.*TODO'
+    # `grep -r TODO *.py` only looks at the top directory
+    - type: regex
+      value: '(--include|-name|-g|-t\s*py|\*\*)\b.*py\b'
+
+- vars: { query: replace foo with bar in notes.txt in place }
+  assert:
+    # The case thetaterm exists for: BSD sed needs an argument after -i, GNU sed must not get a separate one.
+    - type: python
+      value: |
+        import re, subprocess
+        gnu = "GNU" in subprocess.run(["sed", "--version"], capture_output=True, text=True).stdout
+        flag = r"-i(\.\w+)?\s+(?!''|\"\")" if gnu else r"-i\s*(''|\"\"|\.\w+)"
+        return bool(re.search(r"\bsed\b.*" + flag, output)) and "notes.txt" in output
+
+- vars: { query: show the last 20 lines of app.log }
+  assert:
+    - type: regex
+      value: '\btail\b.*(-n\s*20|-20)\b.*app\.log|app\.log.*\|\s*tail\s+(-n\s*20|-20)\b'
+
+- vars: { query: follow app.log as new lines are written }
+  assert:
+    - type: regex
+      value: '(\btail\b.*\s-\w*[fF]|\bless\b.*\+F).*app\.log'
+
+- vars: { query: print the second column of data.csv }
+  assert:
+    - type: python
+      value: |
+        import re
+        awk = re.search(r"\bawk\b.*-F\s*['\"]?,.*\$2", output)
+        cut = re.search(r"\bcut\b", output) and re.search(r"-d\s*['\"]?,", output) and re.search(r"-f\s*2\b", output)
+        return bool((awk or cut) and "data.csv" in output)
+
+- vars: { query: sort names.txt alphabetically and remove duplicates }
+  assert:
+    - type: python
+      value: |
+        import re
+        return "names.txt" in output and bool(
+            re.search(r"\bsort\b[^|]*\s-\w*u", output) or re.search(r"\bsort\b.*\|\s*uniq\b", output)
+        )
+
+- vars: { query: show the 10 most common lines in access.log }
+  assert:
+    # sort | uniq -c, or counting in awk; either way a numeric reverse sort then head
+    - type: regex
+      value: '(\bsort\b.*\|\s*uniq\s+-c|\bawk\b.*(\[\$0\]\+\+|\+\+\w+\[\$0\])).*\bsort\s+(-\w*(nr|rn)\w*|-n\s+-r|-r\s+-n).*\|\s*head'
+
+- vars: { query: count how many lines in app.log contain error }
+  assert:
+    - type: python
+      value: |
+        import re
+        return "app.log" in output and bool(
+            re.search(r"\bgrep\b.*\s-\w*c", output) or re.search(r"\bgrep\b.*\|\s*wc\s+-l", output)
+        )
+
+- vars: { query: convert notes.md to lowercase and print it }
+  assert:
+    - type: python
+      value: |
+        import re
+        return "notes.md" in output and bool(
+            re.search(r"\btr\b.*(upper|A-Z).*(lower|a-z)", output) or "tolower" in output
+        )
+
+- vars: { query: show only the lines of app.log that do not contain DEBUG }
+  assert:
+    - type: regex
+      value: '\bgrep\b.*\s-\w*v.*DEBUG.*app\.log'
+
+# --- processes and system ---
+
+- vars: { query: show which process is listening on port 8080 }
+  assert:
+    - type: regex
+      value: '\b(lsof|ss|netstat)\b.*8080'
+
+- vars: { query: kill the process listening on port 3000 }
+  assert:
+    - type: python
+      value: |
+        import re
+        return "3000" in output and bool(re.search(r"\bkill\b|\bfuser\b.*-k", output))
+
+- vars: { query: show the processes using the most memory }
+  assert:
+    # --sort is procps (Linux) only; BSD and BusyBox ps reject it
+    - type: python
+      value: |
+        import re, subprocess
+        procps = "procps" in subprocess.run(["ps", "--version"], capture_output=True, text=True).stdout
+        if "--sort" in output and not procps:
+            return False
+        return bool(re.search(r"\bps\b.*(--sort|-m\b|\bsort\b)|\btop\b", output))
+
+- vars: { query: show how long the system has been running }
+  assert:
+    - type: regex
+      value: '\buptime\b'
+
+- vars: { query: show how much memory is free }
+  assert:
+    - type: regex
+      value: '\b(free|vm_stat|vmstat|top|memory_pressure|sysctl|meminfo)\b'
+
+- vars: { query: show the full path of the python3 executable }
+  assert:
+    - type: regex
+      value: '\b(which|command\s+-v|type)\b.*python3'
+
+- vars: { query: show environment variables whose name contains PATH }
+  assert:
+    - type: regex
+      value: '\b(env|printenv|export\s+-p|set)\b.*\|\s*grep\b.*PATH'
+
+- vars: { query: print today's date in ISO 8601 format }
+  assert:
+    - type: regex
+      value: '\bdate\b.*(\+%F|%Y-%m-%d|\s-I|--iso-8601)'
+
+- vars: { query: show the date 30 days from now }
+  assert:
+    # GNU date takes -d '+30 days'; BSD date takes -v+30d
+    - type: python
+      value: |
+        import re, subprocess
+        gnu = "GNU" in subprocess.run(["date", "--version"], capture_output=True, text=True).stdout
+        flag = r"(-d|--date)[= ]*['\"]?\+?30\s*days?" if gnu else r"-v\s*\+30d"
+        return bool(re.search(r"\bdate\b.*" + flag, output))
+
+# --- network ---
+
+- vars: { query: download https://example.com/file.zip }
+  assert:
+    - type: python
+      value: |
+        import re
+        url = "https://example.com/file.zip" in output
+        return url and bool(
+            re.search(r"\b(wget|lwp-download)\b", output)
+            or (re.search(r"\bcurl\b", output) and re.search(r"\s-\w*[oO]\b|--output|--remote-name", output))
+        )
+
+- vars: { query: check whether google.com is reachable }
+  assert:
+    # plain `ping host` never exits on Linux or macOS
+    - type: regex
+      value: '^(?=.*google\.com)(?=.*(\bping\b.*\s-c\s*\d|\bcurl\b|\bnc\b))'
+
+- vars: { query: show the IP addresses of this machine }
+  assert:
+    - type: regex
+      value: '\b(ifconfig|ipconfig|ip\s+(-\w+\s+)*a(ddr(ess)?)?|hostname\s+-I)\b'
+
+- vars: { query: show the HTTP response headers of https://example.com }
+  assert:
+    - type: regex
+      value: '\bcurl\b.*(\s-\w*I|--head|\s-\w*D\s*-).*example\.com|\bcurl\b.*example\.com.*(\s-\w*I|--head)'
+
+# --- git ---
+
+- vars: { query: show git commits from the last week }
+  assert:
+    - type: regex
+      value: '\bgit\s+log\b.*--(since|after)'
+
+- vars: { query: undo the last git commit but keep the changes }
+  assert:
+    - type: regex
+      value: '^(?!.*--hard).*\bgit\s+reset\b.*HEAD(~1?|\^)'
+
+- vars: { query: show which files changed in the last git commit }
+  assert:
+    - type: regex
+      value: '\bgit\b.*--(name-only|name-status|stat)'
+
+- vars: { query: delete local git branches already merged into main }
+  assert:
+    - type: regex
+      value: '\bgit\s+branch\s+--merged\b.*\bgit\s+branch\s+-d\b'
+
+- vars: { query: show the git diff of staged changes }
+  assert:
+    - type: regex
+      value: '\bgit\s+diff\b.*--(cached|staged)'

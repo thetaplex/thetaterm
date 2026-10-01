@@ -1,0 +1,65 @@
+# Commands are generated for, but never run on, this machine. Assertions accept
+# any userland unless the task is one where GNU and BSD differ. Tools that exist
+# on only one userland (free, vm_stat, md5sum, md5) need no special casing:
+# generate() rejects commands that are not installed.
+
+# At least one local model failed these in the 2026-09-30 regression run.
+
+# --- files and directories ---
+
+- vars: { query: find all files larger than 100MB }
+  assert:
+    - type: regex
+      value: '\bfind\b.*-size\s+\+100M'
+
+- vars: { query: list the 5 largest files in this directory }
+  assert:
+    - type: regex
+      value: '(\bsort\b|\bls\b.*-\w*S)'
+    # reversed ls piped to head gives the smallest
+    - type: not-regex
+      value: '\bls\b.*\s-[a-zA-Z]*r.*\|\s*head'
+    - type: contains
+      value: "5"
+
+- vars: { query: find broken symlinks in the current directory }
+  assert:
+    # -xtype is GNU only; -L with -type l, or testing each link, works everywhere
+    - type: python
+      value: |
+        import re, subprocess
+        gnu = "GNU" in subprocess.run(["find", "--version"], capture_output=True, text=True).stdout
+        # ! -exec test -e, test ! -e or [ ! -e: without the ! it lists the working links
+        portable = r"\bfind\b.*(-L\b.*-type\s+l|-type\s+l.*(!\s+-exec\s+(test|\[)\s+-e|(test|\[)\s+!\s+-e))"
+        deletes = re.search(r"\brm\b|-delete\b", output)
+        found = re.search(portable, output) or (gnu and re.search(r"-xtype\s+l", output))
+        return bool(found and not deletes)
+
+# --- processes and system ---
+
+- vars: { query: kill the process listening on port 3000 }
+  assert:
+    - type: python
+      value: |
+        import re
+        return "3000" in output and bool(re.search(r"\bkill\b|\bfuser\b.*-k", output))
+
+- vars: { query: show environment variables whose name contains PATH }
+  assert:
+    - type: regex
+      value: '\b(env|printenv|export\s+-p|set)\b.*\|\s*grep\b.*PATH'
+
+# --- network ---
+
+- vars: { query: check whether google.com is reachable }
+  assert:
+    # plain `ping host` never exits on Linux or macOS
+    - type: regex
+      value: '^(?=.*google\.com)(?=.*(\bping\b.*\s-c\s*\d|\bcurl\b|\bnc\b))'
+
+# --- git ---
+
+- vars: { query: delete local git branches already merged into main }
+  assert:
+    - type: regex
+      value: '\bgit\s+branch\s+--merged\b.*\bgit\s+branch\s+-d\b'

@@ -1,0 +1,32 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+description: thetaterm command generation (local models)
+
+prompts:
+  - "{{query}}"
+
+providers:
+  - id: file://provider.py
+    label: gemma4:e4b
+    config: { model: gemma4:e4b }
+  - id: file://provider.py
+    label: qwen3.5:4b
+    config: { model: qwen3.5:4b }
+  - id: file://provider.py
+    label: granite4.1:8b
+    config: { model: granite4.1:8b }
+
+# Each step of the pipeline, as spans: 🔎 on a result in `just view`
+tracing:
+  enabled: true
+  otlp:
+    http:
+      enabled: true
+      port: 4318 # provider.py exports here
+
+defaultTest:
+  assert:
+    - type: not-contains
+      value: /path/to
+
+tests:
+  - file://tests.yaml

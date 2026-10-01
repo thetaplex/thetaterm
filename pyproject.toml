@@ -1,0 +1,30 @@
+[project]
+name = "thetaterm"
+version = "0.1.0"
+description = "Supercharge your terminal with AI"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "python-dotenv>=1.2.3",
+    "rich>=14.1.0",
+    "typer>=0.17.3",
+]
+
+[dependency-groups]
+dev = [
+    "opentelemetry-exporter-otlp-proto-http>=1.45.0",
+    "opentelemetry-sdk>=1.45.0",
+    "pytest>=8.4.1",
+    "ruff>=0.16.9",
+]
+
+[project.scripts]
+tterm = "thetaterm.cli:app"
+
+
+[build-system]
+requires = ["uv_build>=0.8,<0.10"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = ""

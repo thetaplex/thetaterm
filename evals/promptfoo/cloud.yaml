@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=https://promptfoo.dev/config-schema.json
+# Ollama Cloud models, served through the local Ollama after `ollama signin`.
+# Prompts (OS version, man page excerpts) leave this machine.
+description: thetaterm command generation (Ollama Cloud models)
+
+prompts:
+  - "{{query}}"
+
+providers:
+  - id: file://provider.py
+    label: gemma4:31b-cloud
+    config: { model: gemma4:31b-cloud }
+  - id: file://provider.py
+    label: gpt-oss:120b-cloud
+    config: { model: gpt-oss:120b-cloud }
+
+# Each step of the pipeline, as spans: 🔎 on a result in `just view`
+tracing:
+  enabled: true
+  otlp:
+    http:
+      enabled: true
+      port: 4318 # provider.py exports here
+
+defaultTest:
+  assert:
+    - type: not-contains
+      value: /path/to
+
+tests:
+  - file://tests.yaml
