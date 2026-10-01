@@ -225,6 +225,13 @@ def problem(command: str) -> str | None:
         words = tokens(re.sub(r"\\;|';'|\";\"", "_", command))
     except ValueError as e:
         return str(e)
+    # zsh's `autoload -Uz zmv && zmv ...` defines the function it then calls
+    loaded = {
+        name
+        for names in re.findall(r"\bautoload((?:\s+[\w-]+)+)", command)
+        for name in names.split()
+        if not name.startswith("-")
+    }
     at_command = True
     for token in words:
         if token in {"|", "||", "&&", ";", "&", "(", "{"}:
@@ -232,7 +239,10 @@ def problem(command: str) -> str | None:
         elif at_command:
             if re.match(r"\w+=", token) or token in PREFIXES:
                 continue
-            if sh([SHELL, "-c", f"command -v {shlex.quote(token)}"]).returncode:
+            if (
+                token not in loaded
+                and sh([SHELL, "-c", f"command -v {shlex.quote(token)}"]).returncode
+            ):
                 return f"{token}: command not found"
             at_command = False
     return None

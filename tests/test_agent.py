@@ -56,6 +56,13 @@ def test_problem_catches_bad_commands():
     assert problem("") == "empty command"
 
 
+@pytest.mark.skipif(not shutil.which("zsh"), reason="needs zsh")
+def test_problem_accepts_functions_autoloaded_by_the_command(monkeypatch):
+    monkeypatch.setattr("thetaterm.agent.SHELL", shutil.which("zsh"))
+    assert problem("autoload -Uz zmv && zmv '(*).jpeg' '$1.jpg'") is None
+    assert "not found" in problem("zmv '(*).jpeg' '$1.jpg'")
+
+
 def test_outside_flags_commands_leaving_cwd():
     assert outside("find . -name '*.log' 2>/dev/null | sort") is None
     assert outside("sed -i 's/a/b/' notes.txt && ls src/lib") is None
