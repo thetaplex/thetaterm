@@ -14,6 +14,10 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
   commas), `ps` (`--sort` is GNU only), `curl` (saves nothing without `-O` or
   `-o`), `ping` (runs until stopped without `-c`), `sed` (BSD and GNU `-i`
   differ) and `grep` (`-r` with a file pattern misses subdirectories).
+- A git eval, `just eval local git`: 46 queries from a regular development
+  flow, such as rebasing onto origin, fixup commits, stashing staged changes,
+  resolving conflicts, bisecting and safe force pushes. `tests.yaml` keeps
+  its sample of 5.
 
 ### Changed
 
