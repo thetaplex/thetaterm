@@ -14,6 +14,10 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
   commas), `ps` (`--sort` is GNU only), `curl` (saves nothing without `-O` or
   `-o`), `ping` (runs until stopped without `-c`), `sed` (BSD and GNU `-i`
   differ) and `grep` (`-r` with a file pattern misses subdirectories).
+- Evals can be checked by a judge model on OpenRouter instead of, or as well
+  as, their assertions: `just eval local tests judge` or `both`. Assertions can
+  pass a command that looks right but uses an option the program doesn't
+  have.
 
 ### Changed
 
