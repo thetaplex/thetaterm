@@ -1,0 +1,284 @@
+# Commands are generated for, but never run on, this machine. Git behaves the
+# same on every userland, so no assertion checks GNU or BSD.
+
+# Git through a regular development flow: `just eval local git`. tests.yaml
+# has a sample of these.
+
+# --- branches ---
+
+- vars: { query: create a branch feature/login from origin/main and switch to it }
+  assert:
+    - type: regex
+      value: '\bgit\s+(switch\s+(-c|--create)|checkout\s+-b)\s+feature/login\s+origin/main\b'
+
+- vars: { query: rename the current git branch to feature/auth }
+  assert:
+    - type: regex
+      value: '\bgit\s+branch\s+(-m|-M|--move)\s+feature/auth\b'
+
+- vars: { query: push the current branch to origin and set it as upstream }
+  assert:
+    - type: regex
+      value: '\bgit\s+push\b.*(\s-u\b|--set-upstream).*\borigin\b|\bgit\s+push\b.*\borigin\b.*(\s-u\b|--set-upstream)'
+
+- vars: { query: delete the branch feature/old on the origin remote }
+  assert:
+    - type: regex
+      value: '\bgit\s+push\s+origin\s+(--delete\s+|-d\s+|:)feature/old\b'
+
+- vars: { query: delete local git branches already merged into main }
+  assert:
+    - type: regex
+      value: '\bgit\s+branch\s+--merged\b.*\bgit\s+branch\s+-d\b'
+
+- vars: { query: list git branches with the most recently committed first }
+  assert:
+    # without the minus, the oldest come first
+    - type: regex
+      value: '\bgit\s+(branch|for-each-ref)\b.*--sort[= ]-(committerdate|creatordate|authordate)\b'
+
+- vars: { query: check out branch hotfix in a new git worktree at worktrees/hotfix }
+  assert:
+    - type: regex
+      value: '\bgit\s+worktree\s+add\s+worktrees/hotfix\s+hotfix\b'
+
+# --- syncing ---
+
+- vars: { query: fetch from origin and remove remote-tracking branches deleted on the remote }
+  assert:
+    - type: regex
+      value: '\bgit\s+fetch\b.*(\s-p\b|--prune\b)|\bgit\s+remote\s+prune\s+origin\b'
+
+- vars: { query: git pull without creating a merge commit }
+  assert:
+    - type: regex
+      value: '\bgit\s+pull\b.*(--rebase|\s-r\b|--ff-only)'
+
+- vars: { query: rebase my branch onto the latest main from origin }
+  assert:
+    # rebasing onto local main misses what origin has
+    - type: regex
+      value: '\bgit\s+fetch\b.*\bgit\s+rebase\b.*\borigin/main\b|\bgit\s+pull\b.*(--rebase|\s-r\b).*\borigin\s+main\b'
+
+- vars: { query: force push my rebased branch without overwriting commits others pushed }
+  assert:
+    - type: regex
+      value: '\bgit\s+push\b.*--force-with-lease'
+    - type: not-regex
+      value: '\bgit\s+push\b.*(\s-f\b|--force(\s|$))'
+
+# --- commits ---
+
+- vars: { query: add the staged changes to the last commit and keep its message }
+  assert:
+    - type: regex
+      value: '\bgit\s+commit\b.*--amend\b.*--no-edit|\bgit\s+commit\b.*--no-edit\b.*--amend'
+
+- vars: { query: 'change the author of the last commit to Jane Doe <jane@example.com>' }
+  assert:
+    - type: regex
+      value: '\bgit\s+commit\b.*--amend\b.*--author[= ]["'']?Jane Doe <jane@example\.com>'
+
+- vars: { query: squash the last 3 git commits into one }
+  assert:
+    - type: regex
+      value: '\bgit\s+reset\b.*--soft\b.*HEAD(~3|\^\^\^).*\bgit\s+commit\b|\bgit\s+rebase\b.*(-i|--interactive)\b.*HEAD~3'
+
+- vars: { query: make a fixup commit for commit abc1234 }
+  assert:
+    - type: regex
+      value: '\bgit\s+commit\b.*--fixup[= ]abc1234\b'
+
+- vars: { query: rebase onto main and fold the fixup commits into the commits they fix }
+  assert:
+    - type: regex
+      value: '\bgit\s+rebase\b.*--autosquash\b.*\bmain\b|\bgit\s+rebase\b.*\bmain\b.*--autosquash\b'
+
+- vars: { query: apply commit abc1234 from another branch onto the current branch }
+  assert:
+    - type: regex
+      value: '\bgit\s+cherry-pick\b.*\babc1234\b'
+
+- vars: { query: undo commit abc1234 that is already pushed to a shared branch }
+  assert:
+    # reset rewrites history others have pulled
+    - type: regex
+      value: '\bgit\s+revert\b.*\babc1234\b'
+    - type: not-regex
+      value: '\bgit\s+(reset|rebase)\b'
+
+# --- undoing ---
+
+- vars: { query: undo the last git commit but keep the changes }
+  assert:
+    - type: regex
+      value: '^(?!.*--hard).*\bgit\s+reset\b.*HEAD(~1?|\^)'
+
+- vars: { query: unstage app.py but keep my edits to it }
+  assert:
+    - type: regex
+      value: '\bgit\s+(restore\s+(--staged|-S)|reset(\s+HEAD)?)(\s+--)?\s+app\.py\b'
+    - type: not-regex
+      value: '--hard|\bgit\s+rm\b|\bcheckout\b'
+
+- vars: { query: stop tracking .env in git but keep the file }
+  assert:
+    - type: regex
+      value: '\bgit\s+rm\b.*--cached\b.*\.env\b'
+
+- vars: { query: discard all uncommitted changes to tracked files and delete untracked files }
+  assert:
+    - type: python
+      value: |
+        import re
+        tracked = re.search(r"\bgit\s+(reset\s+--hard|checkout\s+(--\s+)?\.|restore\s+(--\s+)?\.)", output)
+        clean = re.search(r"\bgit\s+clean\s+(-\w*f\w*\s+)*-\w*d|\bgit\s+clean\s+-\w*d\w*f", output)
+        # -x also deletes ignored files such as .env
+        ignored = re.search(r"\bgit\s+clean\b.*\s-\w*[xX]", output)
+        return bool(tracked and clean and not ignored)
+
+- vars: { query: get back the commit I lost with git reset --hard }
+  assert:
+    - type: regex
+      value: '\bgit\s+reflog\b|HEAD@\{1\}'
+
+# --- stash ---
+
+- vars: { query: stash my changes including untracked files }
+  assert:
+    - type: regex
+      value: '\bgit\s+stash\b.*(\s-u\b|--include-untracked)'
+
+- vars: { query: stash only the staged changes }
+  assert:
+    - type: regex
+      value: '\bgit\s+stash\b.*(\s-S\b|--staged)'
+
+- vars: { query: apply the second most recent stash without removing it from the stash list }
+  assert:
+    - type: regex
+      value: '\bgit\s+stash\s+apply\s+(["'']?stash@\{1\}|1\b)'
+
+# --- merges and conflicts ---
+
+- vars: { query: list the files with merge conflicts }
+  assert:
+    - type: regex
+      value: '--diff-filter[= ]U|\bgit\s+ls-files\b.*(\s-u\b|--unmerged)'
+
+- vars: { query: during a merge resolve package-lock.json by taking the incoming branch's version }
+  assert:
+    # --ours is the current branch's side in a merge
+    - type: regex
+      value: '\bgit\s+(checkout|restore)\b.*--theirs\b.*package-lock\.json'
+
+- vars: { query: abort the merge in progress }
+  assert:
+    - type: regex
+      value: '\bgit\s+merge\s+--abort\b'
+
+- vars: { query: take only src/app.py from branch feature without merging }
+  assert:
+    - type: regex
+      value: '\bgit\s+(checkout\s+feature\s+(--\s+)?src/app\.py|restore\b.*(--source[= ]|-s\s*)feature\b.*src/app\.py)'
+
+# --- history ---
+
+- vars: { query: show git commits from the last week }
+  assert:
+    - type: regex
+      value: '\bgit\s+log\b.*--(since|after)'
+
+- vars: { query: show which files changed in the last git commit }
+  assert:
+    - type: regex
+      value: '\bgit\b.*--(name-only|name-status|stat)'
+
+- vars: { query: show the git diff of staged changes }
+  assert:
+    - type: regex
+      value: '\bgit\s+diff\b.*--(cached|staged)'
+
+- vars: { query: show the commits on my branch that are not on main }
+  assert:
+    # main...HEAD also lists main's new commits
+    - type: regex
+      value: '\bgit\s+log\b.*(\bmain\.\.(?!\.)|\^main\b|--not\s+main\b)'
+
+- vars: { query: show what my branch changed since it split off from main }
+  assert:
+    # main..HEAD would also undo what main gained since
+    - type: regex
+      value: '\bgit\s+diff\b.*\bmain\.\.\.|\bmerge-base\b'
+
+- vars: { query: show a graph of all branches with one line per commit }
+  assert:
+    - type: python
+      value: |
+        import re
+        log = re.search(r"\bgit\s+log\b.*", output)
+        return bool(log and all(re.search(f, log[0]) for f in [r"--graph", r"--all", r"--oneline|--pretty|--format"]))
+
+- vars: { query: show the history of src/app.py including before it was renamed }
+  assert:
+    - type: regex
+      value: '\bgit\s+log\b.*--follow\b.*src/app\.py'
+
+- vars: { query: print config.yaml as it was in commit abc1234 }
+  assert:
+    - type: regex
+      value: '\bgit\s+(show|cat-file\s+-p)\s+abc1234:(\./)?config\.yaml\b'
+
+- vars: { query: find which commit last changed line 42 of app.py }
+  assert:
+    - type: regex
+      value: '\bgit\s+blame\b.*-L\s*42\b.*app\.py|\bgit\s+blame\b.*app\.py.*-L\s*42\b|\bgit\s+log\b.*-L\s*42,.*app\.py'
+
+- vars: { query: find commits that added or removed the string API_KEY }
+  assert:
+    - type: regex
+      value: '\bgit\s+log\b.*-[SG]\s*["'']?API_KEY'
+
+- vars: { query: find commits whose message mentions fix login }
+  assert:
+    - type: regex
+      value: '\bgit\s+log\b.*--grep[= ]["'']?fix login'
+
+- vars: { query: count commits per author, most first }
+  assert:
+    - type: regex
+      value: '\bgit\s+shortlog\b.*(-\w*s\w*n|-\w*n\w*s|--summary\b.*--numbered|--numbered\b.*--summary)'
+
+- vars: { query: start a git bisect with HEAD bad and tag v1.0 good }
+  assert:
+    # `bisect start <bad> <good>`: the order matters
+    - type: python
+      value: |
+        import re
+        start = re.search(r"\bgit\s+bisect\s+start\s+(HEAD|@)\s+v1\.0\b", output)
+        marks = re.search(r"\bgit\s+bisect\s+bad\b(?!\s+v1)", output) and re.search(r"\bgit\s+bisect\s+good\s+v1\.0\b", output)
+        return bool(start or marks)
+
+# --- tags, clones and submodules ---
+
+- vars: { query: create an annotated tag v1.2.0 and push it to origin }
+  assert:
+    - type: python
+      value: |
+        import re
+        tag = re.search(r"\bgit\s+tag\b[^;&|]*(\s-[as]\b|\s-m\b|--annotate)[^;&|]*v1\.2\.0|\bgit\s+tag\b[^;&|]*v1\.2\.0[^;&|]*(\s-[as]\b|\s-m\b)", output)
+        push = re.search(r"\bgit\s+push\b.*(v1\.2\.0|--tags|--follow-tags)", output)
+        return bool(tag and push)
+
+- vars: { query: clone https://github.com/org/repo.git with only the latest commit }
+  assert:
+    - type: regex
+      value: '\bgit\s+clone\b.*--depth[= ]1\b.*github\.com/org/repo\.git|\bgit\s+clone\b.*github\.com/org/repo\.git.*--depth[= ]1\b'
+
+- vars: { query: initialize and update all git submodules, including nested ones }
+  assert:
+    - type: python
+      value: |
+        import re
+        update = re.search(r"\bgit\s+submodule\s+update\b.*", output)
+        return bool(update and "--init" in update[0] and "--recursive" in update[0])
