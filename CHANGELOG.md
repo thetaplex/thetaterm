@@ -14,10 +14,11 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
   commas), `ps` (`--sort` is GNU only), `curl` (saves nothing without `-O` or
   `-o`), `ping` (runs until stopped without `-c`), `sed` (BSD and GNU `-i`
   differ) and `grep` (`-r` with a file pattern misses subdirectories).
-- Evals can be checked by a judge model on OpenRouter instead of, or as well
-  as, their assertions: `just eval local tests judge` or `both`. Assertions can
-  pass a command that looks right but uses an option the program doesn't
-  have.
+- Evals can be checked by judge models instead of, or as well as, their
+  assertions: `just eval local tests judge` or `both`. Assertions can pass a
+  command that looks right but uses an option the program doesn't have.
+  `configs/judges.yaml` lists the judges, each with its own provider and model
+  and enabled or not; every enabled judge checks each answer, in parallel.
 - A git eval, `just eval local git`: 46 queries from a regular development
   flow, such as rebasing onto origin, fixup commits, stashing staged changes,
   resolving conflicts, bisecting and safe force pushes. `tests.yaml` keeps
@@ -29,6 +30,9 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
   `qwen2.5-coder:3b` passed 46 of 50 queries and `qwen2.5-coder:0.5b` 22.
 - The model is asked for a single program, and a pipeline or `&&` only when one
   program can't do the task.
+- Eval configs and queries are in separate folders, `evals/promptfoo/configs/`
+  and `evals/promptfoo/tests/`, so `just eval` can't take one for the other.
+  Each model in a config has an `enabled` switch.
 
 ### Fixed
 

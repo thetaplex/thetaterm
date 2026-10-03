@@ -6,11 +6,15 @@ description: thetaterm command generation (Ollama Cloud models)
 prompts:
   - "{{query}}"
 
+# Models to run; enabled: false skips one. Read through checks.py, which
+# drops the disabled ones and adds the tests and checks.
 providers:
-  - id: file://provider.py
+  - id: file://../provider.py
+    enabled: true
     label: gemma4:31b-cloud
     config: { model: gemma4:31b-cloud }
-  - id: file://provider.py
+  - id: file://../provider.py
+    enabled: true
     label: gpt-oss:120b-cloud
     config: { model: gpt-oss:120b-cloud }
 
@@ -26,6 +30,3 @@ defaultTest:
   assert:
     - type: not-contains
       value: /path/to
-
-tests:
-  - file://tests.yaml

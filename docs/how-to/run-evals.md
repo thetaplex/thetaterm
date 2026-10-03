@@ -7,10 +7,11 @@ models or see whether a change helped. Commands are generated but never run.
 
 - A development setup: see [CONTRIBUTING.md](../../CONTRIBUTING.md).
 - [Node.js](https://nodejs.org/). `just` runs promptfoo through `npx`.
-- The models listed in `evals/promptfoo/local.yaml`, pulled in Ollama
+- The models enabled in `evals/promptfoo/configs/local.yaml`, pulled in Ollama
   (`ollama pull <model>`).
-- For judged runs only: an [OpenRouter](https://openrouter.ai/) key in
-  `.env` at the repo root, `OPENROUTER_API_KEY=...`.
+- For judged runs: the key of each enabled judge's provider in `.env` at the
+  repo root, such as `OPENROUTER_API_KEY=...` for the default judge on
+  [OpenRouter](https://openrouter.ai/). A local judge on Ollama needs none.
 
 ## Run them
 
@@ -20,8 +21,8 @@ Run every query against every local model:
 just eval
 ```
 
-Each model runs on its own, one after another, so only one is loaded at a
-time. The command exits non-zero if any model fails any query.
+Each enabled model runs on its own, one after another, so only one is loaded
+at a time. To skip a model, set `enabled: false` on it in its config. The command exits non-zero if any model fails any query.
 
 Other runs:
 
@@ -40,19 +41,30 @@ Each run checks answers in one of three ways, given as the third argument:
 
 ```bash
 just eval local tests static    # each query's own assertions (the default)
-just eval local tests judge     # only a judge model
-just eval local tests both      # the assertions and the judge must both pass
+just eval local tests judge     # only the judges
+just eval local tests both      # the assertions and every judge must pass
 ```
 
 Assertions are regexes: fast, free and offline, but they pass a command that
-looks right and uses an option the program doesn't have. The judge,
-`anthropic/claude-sonnet-5` on OpenRouter, reads the task and the command and
-decides. It catches those, but it costs money and can be wrong too. When the
-two disagree in a `both` run, check which one is right; often the regex needs
-fixing.
+looks right and uses an option the program doesn't have. A judge is a model
+that reads the task and the command and decides. It catches those, but it
+costs money and can be wrong too. When a judge and the assertions disagree in
+a `both` run, check which one is right; often the regex needs fixing.
+
+The judges are in `evals/promptfoo/configs/judges.yaml`, each with
+`enabled: true` or `false`. Every enabled judge checks every answer, in
+parallel, and shows as its own row in `just view`; an answer must pass all of
+them. Only `sonnet` (`anthropic/claude-sonnet-5` on OpenRouter) is enabled by
+default.
+
+Each judge names a `provider` and a `model`: any provider promptfoo supports,
+such as `openrouter`, `anthropic:messages`, `openai:chat` or `ollama:chat`. To
+add a judge, add an entry with its own `name`; its key goes in `.env` under the
+name promptfoo expects for that provider.
 
 **Warning:** `judge` and `both` send the queries and generated commands to
-OpenRouter.
+each enabled judge's provider. Only a judge on your own Ollama keeps them on
+this machine.
 
 ## See the results
 
@@ -68,12 +80,12 @@ viewer.
 ## Add a query
 
 1. Add an entry, with assertions on the command, to its area's file, such as
-   `evals/promptfoo/git.yaml`, or to `evals/promptfoo/tests.yaml` if the
-   area has no file. Follow the existing entries. `tests.yaml` keeps a sample
+   `evals/promptfoo/tests/git.yaml`, or to `evals/promptfoo/tests/tests.yaml`
+   if the area has no file. Follow the existing entries. `tests.yaml` keeps a sample
    of each area; copy the query there only if the sample needs it.
 2. If an assertion depends on GNU or BSD tools, check `--version` in the
    assertion, as the `find`, `sed`, `ps` and `date` entries do.
-3. If a model has failed it, copy it to `evals/promptfoo/regression.yaml` too.
+3. If a model has failed it, copy it to `evals/promptfoo/tests/regression.yaml` too.
 4. Run `just eval` and check the new query passes or fails for the reason you
    expect.
 
@@ -95,11 +107,11 @@ See [ADR 0006](../adr/0006-put-a-short-note-before-the-man-page-excerpt.md).
 
 | File | Holds |
 |---|---|
-| `evals/promptfoo/tests.yaml` | a sample of queries from every area, with their assertions |
-| `evals/promptfoo/regression.yaml` | queries some model has failed |
-| `evals/promptfoo/git.yaml` | all git queries: branches, rebases, stashes, conflicts, history |
-| `evals/promptfoo/local.yaml` | local models |
-| `evals/promptfoo/cloud.yaml` | Ollama Cloud models |
-| `evals/promptfoo/judge.yaml` | the judge model and what it checks |
-| `evals/promptfoo/checks.py` | builds a run's config from the models, queries and checks |
+| `evals/promptfoo/configs/local.yaml` | local models, each enabled or not |
+| `evals/promptfoo/configs/cloud.yaml` | Ollama Cloud models, each enabled or not |
+| `evals/promptfoo/configs/judges.yaml` | the judges, each enabled or not, and what they check |
+| `evals/promptfoo/tests/tests.yaml` | a sample of queries from every area, with their assertions |
+| `evals/promptfoo/tests/regression.yaml` | queries some model has failed |
+| `evals/promptfoo/tests/git.yaml` | all git queries: branches, rebases, stashes, conflicts, history |
+| `evals/promptfoo/checks.py` | builds a run's config from the enabled models, the queries and the checks |
 | `evals/promptfoo/provider.py` | runs thetaterm for promptfoo and traces each step |

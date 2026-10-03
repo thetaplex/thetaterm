@@ -1,0 +1,50 @@
+# Judges: models that check each command does the task. Regexes miss commands
+# that look right but aren't, such as an option the program doesn't have.
+# `just eval <config> <tests> judge` or `both` runs every enabled judge, in
+# parallel; an answer must pass all of them. checks.py sets {{system}} to the
+# line thetaterm puts in its own prompt.
+#
+# provider is any promptfoo provider and model one of its models; checks.py
+# joins them as provider:model. Each gets its key from .env as promptfoo
+# expects: openrouter OPENROUTER_API_KEY, anthropic:messages ANTHROPIC_API_KEY,
+# openai:chat OPENAI_API_KEY; ollama:chat needs none. A judge that isn't local
+# sends each query and command to its provider.
+rubric: >-
+  The output is a shell command for this system: {{system}}. It was
+  written for this task: "{{query}}". Pass it only if running it on that
+  system would do exactly that task: every option exists in that
+  system's version of the program or subcommand and does what it is used
+  for here, there are no placeholders, and it deletes or rewrites nothing
+  the task didn't ask for. Another correct way to do the task passes.
+  Every program in the command is installed on that system; thetaterm
+  checked before answering.
+
+judges:
+  - name: sonnet
+    enabled: true
+    provider: openrouter
+    model: anthropic/claude-sonnet-5
+    config:
+      response_format: { type: json_object }
+      max_tokens: 16000
+      passthrough: { reasoning: { effort: medium } }
+  - name: glm
+    # made up macOS facts in a 50-query run: no md5sum, df -Y is Solaris's
+    enabled: false
+    provider: openrouter
+    model: z-ai/glm-5.3
+    config:
+      temperature: 0
+      # without these GLM writes {pass: true}, not JSON, and can think for
+      # 100k+ tokens before running out and replying with nothing
+      response_format: { type: json_object }
+      max_tokens: 16000
+      # low reasoning passed `git log main...HEAD` for commits not on main
+      passthrough: { reasoning: { effort: medium } }
+  - name: gpt-oss
+    # local, nothing leaves the machine; only tried on two commands so far
+    enabled: false
+    provider: ollama:chat
+    model: gpt-oss:20b
+    config:
+      temperature: 0

@@ -4,14 +4,19 @@ description: thetaterm command generation (local models)
 prompts:
   - "{{query}}"
 
+# Models to run; enabled: false skips one. Read through checks.py, which
+# drops the disabled ones and adds the tests and checks.
 providers:
-  - id: file://provider.py
+  - id: file://../provider.py
+    enabled: true
     label: gemma4:e4b
     config: { model: gemma4:e4b }
-  - id: file://provider.py
+  - id: file://../provider.py
+    enabled: true
     label: qwen3.5:4b
     config: { model: qwen3.5:4b }
-  - id: file://provider.py
+  - id: file://../provider.py
+    enabled: true
     label: granite4.1:8b
     config: { model: granite4.1:8b }
 
@@ -27,6 +32,3 @@ defaultTest:
   assert:
     - type: not-contains
       value: /path/to
-
-tests:
-  - file://tests.yaml
