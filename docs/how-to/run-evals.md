@@ -27,6 +27,7 @@ Other runs:
 
 ```bash
 just eval local regression    # only queries some model has failed before
+just eval local git           # git through a regular development flow
 just eval cloud               # Ollama Cloud models
 ```
 
@@ -66,8 +67,10 @@ viewer.
 
 ## Add a query
 
-1. Add an entry to `evals/promptfoo/tests.yaml`, with assertions on the
-   command. Follow the existing entries.
+1. Add an entry, with assertions on the command, to its area's file, such as
+   `evals/promptfoo/git.yaml`, or to `evals/promptfoo/tests.yaml` if the
+   area has no file. Follow the existing entries. `tests.yaml` keeps a sample
+   of each area; copy the query there only if the sample needs it.
 2. If an assertion depends on GNU or BSD tools, check `--version` in the
    assertion, as the `find`, `sed`, `ps` and `date` entries do.
 3. If a model has failed it, copy it to `evals/promptfoo/regression.yaml` too.
@@ -92,8 +95,9 @@ See [ADR 0006](../adr/0006-put-a-short-note-before-the-man-page-excerpt.md).
 
 | File | Holds |
 |---|---|
-| `evals/promptfoo/tests.yaml` | all queries and their assertions |
+| `evals/promptfoo/tests.yaml` | a sample of queries from every area, with their assertions |
 | `evals/promptfoo/regression.yaml` | queries some model has failed |
+| `evals/promptfoo/git.yaml` | all git queries: branches, rebases, stashes, conflicts, history |
 | `evals/promptfoo/local.yaml` | local models |
 | `evals/promptfoo/cloud.yaml` | Ollama Cloud models |
 | `evals/promptfoo/judge.yaml` | the judge model and what it checks |

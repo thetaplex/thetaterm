@@ -18,6 +18,10 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
   as, their assertions: `just eval local tests judge` or `both`. Assertions can
   pass a command that looks right but uses an option the program doesn't
   have.
+- A git eval, `just eval local git`: 46 queries from a regular development
+  flow, such as rebasing onto origin, fixup commits, stashing staged changes,
+  resolving conflicts, bisecting and safe force pushes. `tests.yaml` keeps
+  its sample of 5.
 
 ### Changed
 
