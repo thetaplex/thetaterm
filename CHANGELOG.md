@@ -17,8 +17,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Evals can be checked by judge models instead of, or as well as, their
   assertions: `just eval local tests judge` or `both`. Assertions can pass a
   command that looks right but uses an option the program doesn't have.
-  `configs/judges.yaml` lists the judges, each enabled or not; every enabled
-  judge checks each answer, in parallel.
+  `configs/judges.yaml` lists the judges, each with its own provider and model
+  and enabled or not; every enabled judge checks each answer, in parallel.
 - A git eval, `just eval local git`: 46 queries from a regular development
   flow, such as rebasing onto origin, fixup commits, stashing staged changes,
   resolving conflicts, bisecting and safe force pushes. `tests.yaml` keeps
