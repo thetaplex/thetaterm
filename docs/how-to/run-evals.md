@@ -9,6 +9,8 @@ models or see whether a change helped. Commands are generated but never run.
 - [Node.js](https://nodejs.org/). `just` runs promptfoo through `npx`.
 - The models listed in `evals/promptfoo/local.yaml`, pulled in Ollama
   (`ollama pull <model>`).
+- For judged runs only: an [OpenRouter](https://openrouter.ai/) key in
+  `.env` at the repo root, `OPENROUTER_API_KEY=...`.
 
 ## Run them
 
@@ -30,6 +32,26 @@ just eval cloud               # Ollama Cloud models
 
 **Warning:** `just eval cloud` sends the test prompts to Ollama Cloud. Run
 `ollama signin` first.
+
+## Choose the checks
+
+Each run checks answers in one of three ways, given as the third argument:
+
+```bash
+just eval local tests static    # each query's own assertions (the default)
+just eval local tests judge     # only a judge model
+just eval local tests both      # the assertions and the judge must both pass
+```
+
+Assertions are regexes: fast, free and offline, but they pass a command that
+looks right and uses an option the program doesn't have. The judge,
+`anthropic/claude-sonnet-5` on OpenRouter, reads the task and the command and
+decides. It catches those, but it costs money and can be wrong too. When the
+two disagree in a `both` run, check which one is right; often the regex needs
+fixing.
+
+**Warning:** `judge` and `both` send the queries and generated commands to
+OpenRouter.
 
 ## See the results
 
@@ -74,4 +96,6 @@ See [ADR 0006](../adr/0006-put-a-short-note-before-the-man-page-excerpt.md).
 | `evals/promptfoo/regression.yaml` | queries some model has failed |
 | `evals/promptfoo/local.yaml` | local models |
 | `evals/promptfoo/cloud.yaml` | Ollama Cloud models |
+| `evals/promptfoo/judge.yaml` | the judge model and what it checks |
+| `evals/promptfoo/checks.py` | builds a run's config from the models, queries and checks |
 | `evals/promptfoo/provider.py` | runs thetaterm for promptfoo and traces each step |
