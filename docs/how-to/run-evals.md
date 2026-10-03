@@ -9,8 +9,9 @@ models or see whether a change helped. Commands are generated but never run.
 - [Node.js](https://nodejs.org/). `just` runs promptfoo through `npx`.
 - The models enabled in `evals/promptfoo/configs/local.yaml`, pulled in Ollama
   (`ollama pull <model>`).
-- For runs with an OpenRouter judge: an [OpenRouter](https://openrouter.ai/)
-  key in `.env` at the repo root, `OPENROUTER_API_KEY=...`.
+- For judged runs: the key of each enabled judge's provider in `.env` at the
+  repo root, such as `OPENROUTER_API_KEY=...` for the default judge on
+  [OpenRouter](https://openrouter.ai/). A local judge on Ollama needs none.
 
 ## Run them
 
@@ -53,10 +54,17 @@ a `both` run, check which one is right; often the regex needs fixing.
 The judges are in `evals/promptfoo/configs/judges.yaml`, each with
 `enabled: true` or `false`. Every enabled judge checks every answer, in
 parallel, and shows as its own row in `just view`; an answer must pass all of
-them. Only `sonnet` (`anthropic/claude-sonnet-5`) is enabled by default.
+them. Only `sonnet` (`anthropic/claude-sonnet-5` on OpenRouter) is enabled by
+default.
+
+Each judge names a `provider` and a `model`: any provider promptfoo supports,
+such as `openrouter`, `anthropic:messages`, `openai:chat` or `ollama:chat`. To
+add a judge, add an entry with its own `name`; its key goes in `.env` under the
+name promptfoo expects for that provider.
 
 **Warning:** `judge` and `both` send the queries and generated commands to
-each enabled judge's provider, OpenRouter for the judges listed today.
+each enabled judge's provider. Only a judge on your own Ollama keeps them on
+this machine.
 
 ## See the results
 

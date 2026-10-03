@@ -35,6 +35,17 @@ def enabled(entries: list[dict], what: str) -> list[dict]:
     return on
 
 
+def grader(judge: dict) -> dict:
+    """The judge as a promptfoo provider: openrouter + some/model -> openrouter:some/model."""
+    for key in ("provider", "model"):
+        if not judge.get(key):
+            raise SystemExit(f"judge {judge.get('name')}: no {key}")
+    return {
+        "id": f"{judge['provider']}:{judge['model']}",
+        "config": judge.get("config", {}),
+    }
+
+
 def build(config_name: str, tests_name: str, checks: str) -> dict:
     if checks not in {"static", "judge", "both"}:
         raise SystemExit(f"checks: static, judge or both, not {checks}")
@@ -51,7 +62,7 @@ def build(config_name: str, tests_name: str, checks: str) -> dict:
             {
                 "type": "llm-rubric",
                 "value": judges["rubric"],
-                "provider": judge["provider"],
+                "provider": grader(judge),
                 "metric": judge["name"],
             }
             for judge in enabled(judges["judges"], "judge")

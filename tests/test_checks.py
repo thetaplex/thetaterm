@@ -56,22 +56,25 @@ def model(label, on):
     return {"id": "file://../provider.py", "label": label, "enabled": on}
 
 
-def judge(name, on):
-    return {"name": name, "enabled": on, "provider": {"id": f"openrouter:{name}"}}
+def judge(name, on, provider="openrouter"):
+    return {"name": name, "enabled": on, "provider": provider, "model": f"m/{name}"}
 
 
 def test_disabled_models_and_judges_are_left_out(monkeypatch):
     fake_configs(
         monkeypatch,
         [model("a", True), model("b", False)],
-        [judge("x", True), judge("y", False), judge("z", True)],
+        [judge("x", True), judge("y", False), judge("z", True, "ollama:chat")],
     )
     config = build("local", "tests", "judge")
     assert [p["label"] for p in config["providers"]] == ["a"]
     assert "enabled" not in config["providers"][0]
     rubrics = config["defaultTest"]["assert"]
     assert [r["metric"] for r in rubrics] == ["x", "z"]
-    assert [r["provider"]["id"] for r in rubrics] == ["openrouter:x", "openrouter:z"]
+    assert [r["provider"]["id"] for r in rubrics] == [
+        "openrouter:m/x",
+        "ollama:chat:m/z",
+    ]
 
 
 def test_nothing_enabled_or_no_switch_is_an_error(monkeypatch):
@@ -85,3 +88,11 @@ def test_nothing_enabled_or_no_switch_is_an_error(monkeypatch):
     fake_configs(monkeypatch, [{"id": "file://p.py", "label": "a"}], [])
     with pytest.raises(SystemExit, match="a: enabled must be true or false"):
         build("local", "tests", "static")
+
+
+def test_a_judge_needs_a_provider_and_a_model(monkeypatch):
+    fake_configs(
+        monkeypatch, [model("a", True)], [{"name": "x", "enabled": True, "model": "m"}]
+    )
+    with pytest.raises(SystemExit, match="judge x: no provider"):
+        build("local", "tests", "judge")
