@@ -26,18 +26,19 @@ check: lint test
 run *args:
     uv run tterm "$@"
 
-# Run evals/promptfoo/<tests>.yaml on each <config>.yaml model, one at a time so each loads once.
-# checks: static (each query's assertions), judge (a model on OpenRouter) or both
+# Run evals/promptfoo/tests/<tests>.yaml on each enabled configs/<config>.yaml model, one at a time so each loads once.
+# checks: static (each query's assertions), judge (the enabled judges in configs/judges.yaml) or both
 eval config="local" tests="tests" checks="static":
     #!/usr/bin/env bash
     # promptfoo runs one empty test instead of failing on a missing file
-    for f in evals/promptfoo/{{config}}.yaml evals/promptfoo/{{tests}}.yaml; do
+    for f in evals/promptfoo/configs/{{config}}.yaml evals/promptfoo/tests/{{tests}}.yaml; do
         [ -f "$f" ] || { echo "no such file: $f" >&2; exit 1; }
     done
     run=$(mktemp -d)/run.yaml
     uv run python evals/promptfoo/checks.py {{config}} {{tests}} {{checks}} > "$run" || exit 1
     status=0
-    for model in $(grep -oE 'label: [^,} ]+' evals/promptfoo/{{config}}.yaml | cut -d' ' -f2); do
+    # only the enabled models are in the built config
+    for model in $(sed -n 's/^  label: //p' "$run"); do
         {{promptfoo}} eval -c "$run" --filter-providers "^${model//./\\.}\$" || status=$?
     done
     exit $status
