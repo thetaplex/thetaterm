@@ -4,6 +4,7 @@
 
 ```
 tterm [-q QUERY] [-m MODEL] [-y] [--think]
+tterm --version
 tterm --help
 ```
 
@@ -18,6 +19,7 @@ interactive mode.
 | `-m`, `--model` | name | `gemma4:e4b` | Model to use. Overrides `THETATERM_MODEL`. |
 | `-y`, `--yes` | | off | Run the command without asking. See the warning below. |
 | `--think` | | off | Let the model reason before answering. About twice as slow. Skips the man page lookup. |
+| `-V`, `--version` | | | Print the installed version and exit. |
 | `--install-completion` | | | Install tab completion for your shell. |
 | `--show-completion` | | | Print the completion script. |
 | `--help` | | | Print usage and exit. |

@@ -46,12 +46,18 @@ New to it? Follow the [tutorial](https://github.com/thetaplex/thetaterm/blob/mai
 ## Usage
 
 ```bash
-tterm                                  # interactive
+tterm                                  # interactive; Ctrl-D to exit
 tterm -q "find files modified in the last 2 days"
 tterm -m qwen2.5-coder:3b -q "replace foo with bar in notes.txt in place"   # another model
 tterm -y -q "show git status"          # run without confirming
 tterm --think -q "show the date 30 days from now"   # model reasons first, about 2x slower
+tterm --version                        # installed version
+tterm --install-completion             # tab completion for your shell
+tterm --help
 ```
+
+In interactive mode, a line that starts with `!` is your own command and runs
+as typed, without the model and without asking: `!git status`.
 
 > **Warning:** `-y` runs whatever the model writes, unreviewed. In interactive
 > mode that applies to every line you type. Commands pass a syntax check, not a
