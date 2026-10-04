@@ -27,8 +27,22 @@ DEFAULT_BASE_URL = "http://localhost:11434/v1"  # Ollama
 LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
 
 
+def run(command: str) -> int:
+    """Run the command in the user's shell, here. Returns its exit code."""
+    try:
+        return subprocess.run(  # noqa: S602 running the approved command is the point
+            command, shell=True, executable=SHELL, check=False
+        ).returncode
+    except KeyboardInterrupt:  # Ctrl-C stops the command, not the session
+        return 130
+
+
 def process_query(agent: Agent, query: str, yes: bool) -> int:
     """Generate a command for the query, confirm it, run it. Returns its exit code."""
+    # `!cmd` is the user's own command, as in a shell: run as typed, no model, no question
+    if query.startswith("!"):
+        command = query[1:].strip()
+        return run(command) if command else 0
     try:
         with console.status("thinking…"):
             command = agent.generate(query)
@@ -49,12 +63,7 @@ def process_query(agent: Agent, query: str, yes: bool) -> int:
         )
     if (reason or not yes) and not typer.confirm("Run it?", default=not reason):
         return 0
-    try:
-        return subprocess.run(  # noqa: S602 running the approved command is the point
-            command, shell=True, executable=SHELL, check=False
-        ).returncode
-    except KeyboardInterrupt:  # Ctrl-C stops the command, not the session
-        return 130
+    return run(command)
 
 
 def show_version(value: bool):
@@ -110,7 +119,9 @@ def tterm(
         sys.exit(process_query(agent, query, yes))
 
     console.print(f"[bold cyan]thetaterm[/bold cyan] · {model} · {agent.env}")
-    console.print("[dim]Describe what you want. Ctrl-D to exit.[/dim]")
+    console.print(
+        "[dim]Describe what you want, or !command to run one. Ctrl-D to exit.[/dim]"
+    )
     while True:
         try:
             line = input("\n> ").strip()

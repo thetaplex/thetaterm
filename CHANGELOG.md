@@ -23,6 +23,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
   flow, such as rebasing onto origin, fixup commits, stashing staged changes,
   resolving conflicts, bisecting and safe force pushes. `tests.yaml` keeps
   its sample of 5.
+- In interactive mode, a line that starts with `!` runs as a shell command,
+  as typed, without the model: `!git status`.
 
 ### Changed
 
