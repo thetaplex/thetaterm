@@ -52,3 +52,21 @@ def test_outside_commands_always_ask_defaulting_to_no_even_with_y(monkeypatch):
             [False],
             ["cd && ls"],
         )
+
+
+def test_bang_runs_the_users_own_command_without_the_model_or_a_question(monkeypatch):
+    def no_model(query):
+        raise AssertionError("the model was asked")
+
+    asked, ran = [], []
+    monkeypatch.setattr(typer, "confirm", lambda *a, **k: asked.append(a) or False)
+    monkeypatch.setattr(
+        subprocess,
+        "run",
+        lambda cmd, **k: ran.append(cmd) or SimpleNamespace(returncode=3),
+    )
+    agent = SimpleNamespace(generate=no_model)
+    # outside the current directory too: the user wrote it, so there's nothing to approve
+    assert process_query(agent, "! ls ~/Downloads", yes=False) == 3
+    assert process_query(agent, "!", yes=False) == 0
+    assert ran == ["ls ~/Downloads"] and asked == []
