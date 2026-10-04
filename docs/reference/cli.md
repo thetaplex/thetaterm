@@ -30,7 +30,11 @@ running. Commands that reach outside the current directory still ask, even with
 ## Interactive mode
 
 thetaterm prints the model and the detected system, then shows a `>` prompt.
-Each line you type is one request. Empty lines are ignored. Ctrl-D or Ctrl-C at
+Each line you type is one request. Empty lines are ignored. A line that starts
+with `!` is your own command: `!git status` runs `git status` as typed, without
+the model and without asking, like typing it in your shell. It runs in a new
+shell each time, so `!cd` and `!export` don't carry over to later lines. A bare
+`!` does nothing. Ctrl-D or Ctrl-C at
 the `>` prompt exits. Errors are printed and the session carries on.
 
 ## Confirmation prompt
