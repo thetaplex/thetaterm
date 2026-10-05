@@ -221,15 +221,15 @@ def test_base_url_must_be_http_or_https():
             Agent("m", url)
 
 
-def test_choose_takes_the_first_installed_suggestion():
+def test_choose_takes_the_installed_suggestions():
     agent = Agent("m", "http://localhost")
     agent.ask = lambda prompt, max_tokens=None: (
-        "1. `ip` - Linux\n2. definitely_not_xyz, ls\n3. cat"
+        "1. `ip` - Linux\n2. definitely_not_xyz, ls\n3. cat\n4. ls\n5. echo"
     )
-    expected = "ip" if shutil.which("ip") else "ls"
-    assert agent.choose("show the IP addresses of this machine") == expected
+    expected = (["ip"] if shutil.which("ip") else []) + ["ls", "cat", "echo"]
+    assert agent.choose("show the IP addresses of this machine") == expected[:2]
     agent.ask = lambda prompt, max_tokens=None: "definitely_not_xyz"
-    assert agent.choose("anything") is None
+    assert agent.choose("anything") == []
 
 
 def test_thinking_skips_suggestions_and_man_page():
@@ -237,4 +237,4 @@ def test_thinking_skips_suggestions_and_man_page():
     prompts = []
     agent.ask = lambda prompt, max_tokens=None: prompts.append(prompt) or "ls -la"
     assert agent.generate("list files") == "ls -la"
-    assert len(prompts) == 1 and "Reference for" not in prompts[0]
+    assert len(prompts) == 1 and "<reference>" not in prompts[0]

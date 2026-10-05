@@ -9,6 +9,9 @@ Accepted
 Amended by [ADR 0005](0005-never-run-a-program-to-read-its-docs.md):
 no `--help` fallback.
 
+Amended by [ADR 0007](0007-put-two-programs-man-pages-in-the-prompt.md):
+two programs, not one.
+
 ## Context
 
 Thetaterm is meant to work with small models that run on a laptop. They know
