@@ -16,11 +16,16 @@
   assert:
     - type: regex
       value: '(\bsort\b|\bls\b.*-\w*S)'
-    # reversed ls piped to head gives the smallest
+    # reversed ls piped to head gives the smallest; sort -nr later in the pipeline is fine
     - type: not-regex
-      value: '\bls\b.*\s-[a-zA-Z]*r.*\|\s*head'
+      value: '\bls\b[^|]*\s-[a-zA-Z]*r[^|]*\|\s*head'
     - type: contains
       value: "5"
+    # du -a lists directories too, starting with . itself; du on files found with -type f is fine
+    - type: python
+      value: |
+        import re
+        return not re.search(r"\bdu\b", output) or bool(re.search(r"-type\s+f\b", output))
 
 - vars: { query: find broken symlinks in the current directory }
   assert:
@@ -63,3 +68,6 @@
   assert:
     - type: regex
       value: '\bgit\s+branch\s+--merged\b.*\bgit\s+branch\s+-d\b'
+    # --merged main lists main itself; unless it is filtered out, it gets deleted
+    - type: regex
+      value: '\be?grep\s+(-\w+\s+)*-\w*v\w*\s+(-\w+\s+)*([''"][^''"]*\bmain\b|[^\s|]*\bmain\b)'
