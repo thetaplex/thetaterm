@@ -50,11 +50,16 @@
   assert:
     - type: regex
       value: '(\bsort\b|\bls\b.*-\w*S)'
-    # reversed ls piped to head gives the smallest
+    # reversed ls piped to head gives the smallest; sort -nr later in the pipeline is fine
     - type: not-regex
-      value: '\bls\b.*\s-[a-zA-Z]*r.*\|\s*head'
+      value: '\bls\b[^|]*\s-[a-zA-Z]*r[^|]*\|\s*head'
     - type: contains
       value: "5"
+    # du -a lists directories too, starting with . itself; du on files found with -type f is fine
+    - type: python
+      value: |
+        import re
+        return not re.search(r"\bdu\b", output) or bool(re.search(r"-type\s+f\b", output))
 
 - vars: { query: create the directory a/b/c including any missing parents }
   assert:
@@ -123,6 +128,9 @@
   assert:
     - type: regex
       value: '\bdu\b.*(-d\s*1|--max-depth[= ]1|\*)|\bfind\b.*-maxdepth\s+1.*-type\s+d.*\bdu\b'
+    # BSD and GNU du both reject -s together with a depth
+    - type: not-regex
+      value: '\bdu\b(?=[^|;&]*\s-\w*s)[^|;&]*(\s-\w*d\s*\d|--max-depth)'
 
 - vars: { query: compress the logs directory into logs.tar.gz }
   assert:
@@ -132,13 +140,26 @@
 - vars: { query: extract archive.tar.gz }
   assert:
     # without -f, tar reads standard input, not the archive
-    - type: regex
-      value: '\btar\b\s+(-?\w*x.*\s-?\w*f|-?\w*x\w*f)\s*archive\.tar\.gz|\bg(un)?zip\b\s+-\w*[dc].*archive\.tar\.gz.*\|\s*tar\b\s+-?\w*x'
+    - type: python
+      value: |
+        import re, subprocess
+        gnu = "GNU" in subprocess.run(["gzip", "--version"], capture_output=True, text=True).stdout
+        tar = re.search(r"\btar\b\s+(-?\w*x.*\s-?\w*f|-?\w*x\w*f)\s*archive\.tar\.gz", output)
+        # or decompress to standard output and pipe that to tar -x
+        gz = re.search(r"\b(gunzip|gzip|zcat)\b([^|]*)archive\.tar\.gz[^|]*\|\s*tar\s+-?\w*x", output)
+        if not gz:
+            return bool(tar)
+        program, args = gz[1], gz[2]
+        # BSD zcat looks for archive.tar.gz.Z when given a name; GNU zcat takes it
+        to_stdout = "<" in args or re.search(r"\s-\w*c|--stdout", args) or (program == "zcat" and gnu)
+        decompresses = program != "gzip" or re.search(r"\s-\w*d|--decompress", args)
+        return bool(tar or (to_stdout and decompresses))
 
 - vars: { query: list the files inside archive.tar.gz without extracting it }
   assert:
+    # without -f, tar reads the default device, not the archive
     - type: regex
-      value: '\btar\b\s+-?\w*t.*archive\.tar\.gz'
+      value: '\btar\b\s+(-?\w*t\w*f|-?\w*t.*\s-\w*f)\s*archive\.tar\.gz'
 
 - vars: { query: unzip bundle.zip into the out directory }
   assert:
@@ -258,10 +279,20 @@
     # --sort is procps (Linux) only; BSD and BusyBox ps reject it
     - type: python
       value: |
-        import re, subprocess
+        import platform, re, subprocess
         procps = "procps" in subprocess.run(["ps", "--version"], capture_output=True, text=True).stdout
         if "--sort" in output and not procps:
             return False
+        top = re.search(r"\btop\b([^|;&]*)(\|)?", output)
+        if top:
+            mac = platform.system() == "Darwin"
+            # macOS top's memory sort keys; rss and %mem are procps column names
+            key = re.search(r"-o\s*[+-]?(\S+)", top[1])
+            if mac and key and key[1] not in {"mem", "rsize", "rprvt", "vsize", "vprvt", "purg"}:
+                return False
+            # piped top never exits unless told to take samples: -l on macOS, -b elsewhere
+            if top[2] and not re.search(r"\s-l\s*\d" if mac else r"\s-\w*b", top[1]):
+                return False
         return bool(re.search(r"\bps\b.*(--sort|-m\b|\bsort\b)|\btop\b", output))
 
 - vars: { query: show how long the system has been running }
@@ -276,6 +307,12 @@
     # vm_stat lines read "Pages free: N": fields 1 and 2 are words, not the number
     - type: not-regex
       value: '\bvm_stat\b.*\bawk\b.*\$[12]\b'
+    # piped top never exits unless told to take samples: -l on macOS, -b elsewhere
+    - type: python
+      value: |
+        import platform, re
+        top = re.search(r"\btop\b([^|;&]*)\|", output)
+        return not top or bool(re.search(r"\s-l\s*\d" if platform.system() == "Darwin" else r"\s-\w*b", top[1]))
 
 - vars: { query: show the full path of the python3 executable }
   assert:
@@ -289,8 +326,14 @@
 
 - vars: { query: print today's date in ISO 8601 format }
   assert:
-    - type: regex
-      value: '\bdate\b.*(\+%F|%Y-%m-%d|\s-I|--iso-8601)'
+    # -I takes its format attached (-Idate): `-I date` reads date as a time to set;
+    # --iso-8601 is GNU only
+    - type: python
+      value: |
+        import re, subprocess
+        gnu = "GNU" in subprocess.run(["date", "--version"], capture_output=True, text=True).stdout
+        iso = r"\+%F|%Y-%m-%d|\s-I\w*(?=\s*($|[|;&)]))" + (r"|--iso-8601" if gnu else "")
+        return bool(re.search(r"\bdate\b.*(" + iso + ")", output))
 
 - vars: { query: show the date 30 days from now }
   assert:
@@ -352,6 +395,9 @@
   assert:
     - type: regex
       value: '\bgit\s+branch\s+--merged\b.*\bgit\s+branch\s+-d\b'
+    # --merged main lists main itself; unless it is filtered out, it gets deleted
+    - type: regex
+      value: '\be?grep\s+(-\w+\s+)*-\w*v\w*\s+(-\w+\s+)*([''"][^''"]*\bmain\b|[^\s|]*\bmain\b)'
 
 - vars: { query: show the git diff of staged changes }
   assert:

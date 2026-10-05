@@ -25,7 +25,7 @@ _provider.add_span_processor(
     SimpleSpanProcessor(OTLPSpanExporter("http://127.0.0.1:4318/v1/traces"))
 )
 tracer = _provider.get_tracer("thetaterm.evals")
-MAX_ATTR = 4000
+MAX_ATTR = 20000
 
 
 def traced(name, attrs):

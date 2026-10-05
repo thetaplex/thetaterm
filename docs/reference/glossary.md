@@ -7,7 +7,7 @@ _Avoid:_ prompt (that's what thetaterm sends to the model).
 pipes and `&&`.
 
 **Prompt**: The text thetaterm sends to the model. It holds the system description, the
-reference and the request.
+references, the rules and the request.
 
 **System description**: One line naming your OS, userland and shell, for example
 `macOS 26.6.2, BSD userland, zsh shell`. It's shown in interactive mode.
@@ -16,11 +16,12 @@ reference and the request.
 system: GNU coreutils (most Linux), BSD (macOS) or BusyBox (Alpine, embedded).
 Their options differ.
 
-**Chosen command**: The program the request is built around, such as `find`. The model suggests
-up to five, and thetaterm takes the first one installed.
+**Chosen command**: A program the request may be built around, such as `find`. The model suggests
+up to three, and thetaterm takes the first two installed.
 
-**Reference**: The parts of the chosen command's man page that best
+**Reference**: The parts of a chosen command's man page that best
 match the request, put in the prompt, after the command's note if it has one.
+Each chosen command has its own.
 _Avoid:_ context, docs.
 
 **Note**: A few lines thetaterm ships about a program, for facts its man page

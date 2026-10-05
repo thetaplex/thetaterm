@@ -2,7 +2,7 @@
 
 Small models can't memorise the differences between GNU, BSD and BusyBox
 userlands, so we don't ask them to: the model suggests commands, the machine
-says which are installed, and the man page of the chosen one goes into the
+says which are installed, and the man pages of the first two go into the
 prompt. The model only has to read and fill in.
 """
 
@@ -316,41 +316,53 @@ class Agent:
                 f"{self.url}: unexpected reply {json.dumps(reply)[:200]}"
             ) from None
 
-    def choose(self, query: str) -> str | None:
-        """The main command for the task: the model suggests, the OS confirms."""
+    def choose(self, query: str) -> list[str]:
+        """Commands for the task, best first: the model suggests, the OS confirms."""
         answer = self.ask(
-            f"System: {self.env}\nTask: {query}\n"
-            "Which commands can do this? List up to 5 command names only, one per line, best first.",
+            "You are a CLI assistant choosing which command-line tools to use for a task. "
+            "Your answer will be parsed by a program, so follow the output format exactly.\n\n"
+            f"<environment>\n{self.env}\n</environment>\n\n"
+            f"<task>\n{query}\n</task>\n\n"
+            "List up to 3 programs that could perform this task on this system, best choice first. "
+            "Output only the program names, one per line, with no numbering, bullets, backticks, or other text.",
             # some models repeat the last name until the context runs out
             max_tokens=60,
         )
         # one name per line or comma: "1. `ifconfig` - shows ..." -> ifconfig
+        names = []
         for item in re.split(r"[\n,]", answer):
             name = next(iter(re.findall(r"[A-Za-z][\w.+-]*", item)), None)
-            if name and shutil.which(name):
-                return name
-        return None
+            if name and name not in names and shutil.which(name):
+                names.append(name)
+        return names[:2]
 
     def generate(self, query: str) -> str:
         """Best command for the query; raises RuntimeError if none passes checks."""
-        prompt = f"System: {self.env}\n"
+        prompt = (
+            "You are a CLI assistant generating shell commands that will be run directly on the user's machine. "
+            "Use the reference below for this system's version of the tool, which may differ from GNU/Linux behavior, "
+            "then follow the rules to write the command for the task.\n\n"
+        )
+        # tags mark where each part ends, so a man page can't read as instructions
+        prompt += f"<environment>\n{self.env}\n</environment>\n"
         # a thinking model works out the platform's flags itself; the extra
         # round trip and man page only slow it down (evals: 49/50 vs 48/50)
-        chosen = None if self.thinking else self.choose(query)
-        if chosen:
+        # best last, nearest the rules and task
+        for chosen in [] if self.thinking else reversed(self.choose(query)):
             ref = reference(chosen, query)
-            prompt += f"\nReference for `{chosen}` on this system:\n{ref}\n"
+            prompt += f"\n<reference>\n{ref}\n</reference>\n"
         prompt += (
-            f"\nTask: {query}\nWrite one {os.path.basename(SHELL)} command for this system. "
+            f"\n<rules>\nWrite one {os.path.basename(SHELL)} command for this system. "
             "Use real paths, never placeholders like /path/to; if the task names no location, use the current directory (.). "
             # small models chain programs they don't need, and break the chain (evals)
             "Prefer a single program; use a pipeline or && only when one program can't do the task. "
-            "Reply with the command only.\n"
+            "Reply with the command only.\n</rules>\n"
+            f"\n<task>\n{query}\n</task>\n"
         )
 
         attempt = prompt
         for _ in range(RETRIES + 1):
-            command = clean(self.ask(attempt + "Command:"))
+            command = clean(self.ask(attempt))
             error = problem(command)
             if error is None:
                 return command

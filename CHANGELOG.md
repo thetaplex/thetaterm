@@ -7,6 +7,29 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### Changed
+
+- The man pages of the first two installed programs the model suggests go in
+  the prompt, not just the first. When the model ranks the wrong program
+  first, it can still use the right one: asked for an MD5 checksum,
+  `gemma4:e4b-mlx` now writes `md5`, not `shasum -a 1`. Judged by
+  `claude-opus-5` on the 50 eval queries, it passed 46, against 43 with one
+  program and 45 with three. See ADR 0007.
+- The prompts mark each part with a tag, such as `<environment>`,
+  `<reference>`, `<rules>` and `<task>`, so a man page can't read as
+  instructions, and start by saying what the model is for.
+
+### Fixed
+
+- Eval assertions that passed commands that fail on macOS: `du -s` with a
+  depth, `date -I date`, macOS `top` with a Linux sort key or piped without
+  `-l`, `tar -t` without `-f`, `du -a` for the largest files, and
+  `git branch --merged main` piped to `git branch -d` without leaving out
+  `main`. They now also pass `gunzip < archive.tar.gz | tar -x`, and
+  `sort -nr` after `ls` no longer counts as `ls -r`.
+- Eval traces keep up to 20,000 characters of each prompt, not 4,000, so
+  `just view` shows the whole of a prompt with two man page excerpts.
+
 ## [0.3.0] - 2026-10-04
 
 ### Added

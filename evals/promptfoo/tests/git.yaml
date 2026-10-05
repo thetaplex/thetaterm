@@ -30,6 +30,9 @@
   assert:
     - type: regex
       value: '\bgit\s+branch\s+--merged\b.*\bgit\s+branch\s+-d\b'
+    # --merged main lists main itself; unless it is filtered out, it gets deleted
+    - type: regex
+      value: '\be?grep\s+(-\w+\s+)*-\w*v\w*\s+(-\w+\s+)*([''"][^''"]*\bmain\b|[^\s|]*\bmain\b)'
 
 - vars: { query: list git branches with the most recently committed first }
   assert:

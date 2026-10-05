@@ -12,8 +12,8 @@ checks the answer.
 ```mermaid
 flowchart TD
     R[Request] --> S[Describe the system]
-    S --> C[Model suggests programs;<br>first installed one is chosen]
-    C --> M[Excerpt its man page]
+    S --> C[Model suggests programs;<br>first two installed are chosen]
+    C --> M[Excerpt their man pages]
     M --> W[Model writes a command]
     W --> K{Checks pass?}
     K -- no, up to 2 retries --> W
@@ -27,17 +27,20 @@ flowchart TD
 userland by checking whether `ls` is BusyBox or reports GNU, and takes the shell
 as described [below](#which-shell). Every prompt starts with this line.
 
-**Choose the program.** The model is asked which programs could do the task, up
-to five, best first. thetaterm takes the first one that's actually installed.
-The model is good at naming tools. What it's bad at is their options on your
-particular system.
+**Choose the programs.** The model is asked which programs could do the task, up
+to three, best first. thetaterm takes the first two that are actually
+installed. The model is good at naming tools. What it's bad at is their options
+on your particular system. It also doesn't always rank the right tool first:
+asked for an MD5 checksum, a small model suggests `shasum` before `md5`. With
+both man pages in front of it, it writes `md5`
+([ADR 0007](../adr/0007-put-two-programs-man-pages-in-the-prompt.md)).
 
-**Excerpt the man page.** thetaterm reads the chosen program's `man` page and
+**Excerpt the man pages.** thetaterm reads each chosen program's `man` page and
 splits it into paragraphs and option entries. It keeps the NAME and SYNOPSIS,
 then the entries that share the most words with your request, with rare words
-counting more than common ones. It stops at 3,500 characters, so a small
-model's context isn't flooded. If there's no man page, the model gets no
-reference. thetaterm never runs a program to read its docs, such as with
+counting more than common ones. Each excerpt stops at 3,500 characters, so a
+small model's context isn't flooded. If a program has no man page, the model
+gets no reference for it. thetaterm never runs a program to read its docs, such as with
 `--help`, because not every program honours that flag
 ([ADR 0005](../adr/0005-never-run-a-program-to-read-its-docs.md)).
 
@@ -46,9 +49,12 @@ excerpt tends to miss, such as `awk` splitting fields on spaces, not commas.
 The note goes first and shares the 3,500 characters with the excerpt
 ([ADR 0006](../adr/0006-put-a-short-note-before-the-man-page-excerpt.md)).
 
-**Write the command.** The model gets the system line, the excerpt and your
-request, and is told to answer with one command, using real paths rather than
-placeholders, and the current directory when you didn't name one. thetaterm
+**Write the command.** The model gets the system line, the excerpts, the rules
+and your request, each in its own tag, such as `<reference>`, so a man page
+can't read as instructions. The excerpts come in reverse order, so the best
+program's is last, nearest your request. The rules say to answer with one
+command, using real paths rather than placeholders, and the current directory
+when you didn't name one. thetaterm
 strips anything the model wraps around the command, such as code fences, a
 `$ ` prompt or a `Command:` label.
 
@@ -64,7 +70,7 @@ it's shown in red with the reason, and the default answer is no.
 ## With `--think`
 
 With reasoning on, the model works out the options itself, so `--think` skips
-choosing a program and excerpting its man page, and makes one model call. When
+choosing programs and excerpting their man pages, and makes one model call. When
 this was added, `gemma4:e4b` passed 49 of 50 evals this way, against 48 of 50
 without `--think`, but took about twice as long. The checks and confirmation
 still apply.
