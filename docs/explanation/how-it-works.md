@@ -52,9 +52,11 @@ The note goes first and shares the 3,500 characters with the excerpt
 **Write the command.** The model gets the system line, the excerpts, the rules
 and your request, each in its own tag, such as `<reference>`, so a man page
 can't read as instructions. The excerpts come in reverse order, so the best
-program's is last, nearest your request. The rules say to answer with one
-command, using real paths rather than placeholders, and the current directory
-when you didn't name one. thetaterm
+program's is last, nearest your request. The rules say to write one command,
+using real paths rather than placeholders, and the current directory when you
+didn't name one. They also ask the model to list the steps and check each
+option exists on your system before it gives the command in a code block:
+small models skip what they don't write down. thetaterm
 strips anything the model wraps around the command, such as code fences, a
 `$ ` prompt or a `Command:` label.
 

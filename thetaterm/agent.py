@@ -356,7 +356,9 @@ class Agent:
             "Use real paths, never placeholders like /path/to; if the task names no location, use the current directory (.). "
             # small models chain programs they don't need, and break the chain (evals)
             "Prefer a single program; use a pipeline or && only when one program can't do the task. "
-            "Reply with the command only.\n</rules>\n"
+            # small models skip what they don't write down (evals)
+            "First list the steps, and check each option you use exists in this system's version of the program. "
+            "Then give the command in a single code block, the only one in your reply.\n</rules>\n"
             f"\n<task>\n{query}\n</task>\n"
         )
 

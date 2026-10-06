@@ -15,6 +15,11 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
   `gemma4:e4b-mlx` now writes `md5`, not `shasum -a 1`. Judged by
   `claude-opus-5` on the 50 eval queries, it passed 46, against 43 with one
   program and 45 with three. See ADR 0007.
+- The model lists the steps and checks each option exists on this system
+  before it writes the command, in a code block. Judged by
+  `claude-opus-5`, `gemma4:e4b-mlx` passed 40 of the 46 git eval queries,
+  against 36, and 47 of the 50 general ones, against 46. It takes about
+  twice as long to answer.
 - The prompts mark each part with a tag, such as `<environment>`,
   `<reference>`, `<rules>` and `<task>`, so a man page can't read as
   instructions, and start by saying what the model is for.
