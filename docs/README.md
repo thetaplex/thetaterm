@@ -19,8 +19,10 @@ Each page does one job, following [Diátaxis](https://diataxis.fr/):
 | learn by doing, from nothing | [Tutorial: your first command](tutorials/first-command.md) |
 | use a server other than Ollama | [How to use another model server](how-to/use-another-model-server.md) |
 | measure models against the test queries | [How to run the evals](how-to/run-evals.md) |
+| let an AI agent use thetaterm | [How to use thetaterm from an AI agent](how-to/use-from-an-agent.md) |
 | look up an option, setting or exit status | [Command-line reference](reference/cli.md) |
 | find out what a message means and what to do | [Messages](reference/messages.md) |
+| look up what the MCP tools take and return | [MCP tools reference](reference/mcp-tools.md) |
 | check what a term means | [Glossary](reference/glossary.md) |
 | understand how a command is made | [How it works](explanation/how-it-works.md) |
 | understand what is and isn't checked | [Safety model](explanation/safety.md) |

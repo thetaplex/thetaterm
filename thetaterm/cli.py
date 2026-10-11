@@ -27,6 +27,12 @@ DEFAULT_BASE_URL = "http://localhost:11434/v1"  # Ollama
 LOCAL_HOSTS = {"localhost", "127.0.0.1", "::1"}
 
 
+def unencrypted(base_url: str, api_key: str | None) -> bool:
+    """Whether the API key would cross the network in plain text."""
+    url = urlsplit(base_url)
+    return bool(api_key) and url.scheme == "http" and url.hostname not in LOCAL_HOSTS
+
+
 def run(command: str) -> int:
     """Run the command in the user's shell, here. Returns its exit code."""
     try:
@@ -105,8 +111,7 @@ def tterm(
     """
     base_url = os.getenv("THETATERM_BASE_URL") or DEFAULT_BASE_URL
     api_key = os.getenv("THETATERM_API_KEY")
-    url = urlsplit(base_url)
-    if api_key and url.scheme == "http" and url.hostname not in LOCAL_HOSTS:
+    if unencrypted(base_url, api_key):
         console.print(
             f"[yellow]warning: API key sent unencrypted to {base_url}[/yellow]"
         )

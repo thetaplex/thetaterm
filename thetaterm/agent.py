@@ -55,7 +55,8 @@ def sh(args: list[str], timeout: int = 10) -> subprocess.CompletedProcess:
         return subprocess.run(  # noqa: S603 an argv list, no shell
             args, capture_output=True, text=True, timeout=timeout, env=env, check=False
         )
-    except (OSError, subprocess.TimeoutExpired) as e:
+    # ValueError: a NUL byte in an argument
+    except (OSError, ValueError, subprocess.TimeoutExpired) as e:
         return subprocess.CompletedProcess(args, 1, "", str(e))
 
 
@@ -225,7 +226,7 @@ def outside(command: str) -> str | None:
 
 def problem(command: str) -> str | None:
     """Why this command would fail before it even runs, or None."""
-    if not command:
+    if not command.strip():
         return "empty command"
     # stderr, not the exit status: zsh -n returns 1 for a valid `! cmd`
     r = sh([SHELL, "-n", "-c", command])
@@ -249,6 +250,10 @@ def problem(command: str) -> str | None:
             at_command = True
         elif at_command:
             if re.match(r"\w+=", token) or token in PREFIXES:
+                continue
+            # `$cmd` or `$(...)`'s `$`: the program is only known when it runs
+            if token.startswith(("$", "`")):
+                at_command = False
                 continue
             if (
                 token not in loaded

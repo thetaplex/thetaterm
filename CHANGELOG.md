@@ -7,6 +7,21 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### Added
+
+- `tterm-mcp`, an MCP server, so AI agents such as Claude Code can use
+  thetaterm. Its tools give the system description, the reference for an
+  installed program, a check of a command, and a suggested command. None of
+  them runs a command. Install it with `uv tool install 'thetaterm[mcp]'`.
+  See ADR 0008.
+
+### Fixed
+
+- A command made only of spaces is reported as `empty command`, and one
+  containing a NUL byte is reported as a problem instead of crashing the check.
+- A command that starts with a variable or `$(...)` is no longer reported as
+  `$: command not found`. The program inside `$(...)` is still checked.
+
 ## [0.4.0] - 2026-10-07
 
 ### Changed

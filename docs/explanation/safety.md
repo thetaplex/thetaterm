@@ -41,6 +41,15 @@ the model, but it never runs a program to read its docs
 [ADR 0002](../adr/0002-check-outside-paths-by-pattern-not-sandbox.md) for why
 it's built this way.
 
+## From an agent
+
+`tterm-mcp` lets an AI agent use thetaterm's docs, checks and suggestions
+([ADR 0008](../adr/0008-offer-system-knowledge-to-agents-over-mcp.md)). None
+of its tools runs a command. The agent runs what it decides to, under its own
+permission prompts, so the guard's reason is advice to the agent, not a
+question to you. `docs` hands the program's name to `man`, so it only accepts
+the name of an installed program, never an option or a path.
+
 ## `-y`
 
 `-y` removes the question for commands that stay inside the current
