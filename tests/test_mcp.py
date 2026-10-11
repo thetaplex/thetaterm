@@ -1,8 +1,12 @@
 import asyncio
+import json
 import subprocess
+import sys
+from pathlib import Path
 
 import pytest
 from mcp.server.mcpserver.exceptions import ToolError
+from mcp.types import LATEST_PROTOCOL_VERSION
 
 from thetaterm import mcp
 from thetaterm.agent import Agent
@@ -58,3 +62,38 @@ def test_suggest_command_turns_model_failures_into_tool_errors(monkeypatch):
     monkeypatch.setenv("THETATERM_BASE_URL", "file:///etc/passwd")
     with pytest.raises(ToolError, match="not an http"):
         call("suggest_command", task="t")
+
+
+def test_installed_script_answers_with_nothing_but_json_on_stdout():
+    """A stray print would corrupt the protocol for clients stricter than the SDK's."""
+    messages = [
+        {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+                "protocolVersion": LATEST_PROTOCOL_VERSION,
+                "capabilities": {},
+                "clientInfo": {"name": "test", "version": "0"},
+            },
+        },
+        {"jsonrpc": "2.0", "method": "notifications/initialized"},
+        {"jsonrpc": "2.0", "id": 2, "method": "tools/list"},
+    ]
+    server = subprocess.Popen(  # noqa: S603 our own script
+        [Path(sys.executable).with_name("tterm-mcp")],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        text=True,
+    )
+    for m in messages:
+        server.stdin.write(json.dumps(m) + "\n")
+    server.stdin.flush()
+    # read before closing stdin: at EOF the server stops, maybe before answering
+    replies = [json.loads(server.stdout.readline()) for _ in range(2)]
+    server.stdin.close()
+    assert server.wait(timeout=30) == 0
+    assert server.stdout.read() == ""
+    assert [r["id"] for r in replies] == [1, 2]
+    assert "suggest_command" in {t["name"] for t in replies[1]["result"]["tools"]}
