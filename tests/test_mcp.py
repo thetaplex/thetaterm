@@ -43,6 +43,8 @@ def test_check_reports_problem_and_outside_or_none():
         "no-such-program-xyz: command not found"
     )
     assert call("check", command="rm /tmp/x")["outside"] == "absolute path /tmp/x"
+    unbalanced = call("check", command="echo 'x")
+    assert unbalanced["problem"] and unbalanced["outside"] is None
 
 
 def test_suggest_command_flags_outside_commands(monkeypatch):

@@ -19,9 +19,11 @@ Options considered:
 - **What to offer:**
   - The system description, docs and checks only. They need no model and
     answer in milliseconds.
-  - Those, plus command suggestions from thetaterm's model. A capable agent
-    usually writes better commands itself than a small local model does, but
-    small local agents and unfamiliar systems gain from it.
+  - Those, plus command suggestions from thetaterm's model. The calling agent
+    sends a one-line task and gets one command back, so the man-page reading
+    and retries run on a local model instead of filling the caller's context
+    and token bill. Small local agents and unfamiliar systems gain from it too.
+    It is slower, and the calling model still sees the task and the command.
   - Those, plus running the command. ADR 0002's guard assumes a person reads
     each command, and an agent already has its own shell and permission
     prompts, so a second way to run commands would only weaken them.
@@ -45,13 +47,15 @@ Ship `tterm-mcp`, a stdio MCP server on the official SDK, installed only with
 the optional `mcp` extra. It offers four tools, all marked read-only:
 `system_info`, `docs`, `check` and `suggest_command`. No tool runs a command.
 `suggest_command` returns the guard's reason along with the command, and its
-description tells agents it is slow and that `docs` and `check` may serve them
-better.
+description tells agents it saves their tokens at the cost of seconds.
+`system_info`, `docs` and `check` are the steps it takes, offered so an agent
+can do them itself or verify a command.
 
 ## Consequences
 
-- An agent can get the right options for this system's tools without
-  thetaterm's model, and use thetaterm's model if it wants a command written.
+- An agent can hand command-writing to a local model and spend none of its own
+  tokens on man pages, or get the right options for this system's tools
+  without thetaterm's model.
 - `uv tool install thetaterm` keeps its three dependencies. MCP users install
   `thetaterm[mcp]`.
 - SDK upgrades go through `uv.lock` and Dependabot, like every other dependency.

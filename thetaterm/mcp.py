@@ -49,14 +49,18 @@ def server():
         (bad syntax, a program not installed). `outside`: why it reaches outside the
         current directory (sudo, ~, an absolute path, ..). null means none found;
         it doesn't mean the command is safe."""
-        return {"problem": problem(command), "outside": outside(command)}
+        try:
+            reason = outside(command)
+        except ValueError:  # unbalanced quotes, which problem reports
+            reason = None
+        return {"problem": problem(command), "outside": reason}
 
     @app.tool(annotations=read_only)
     def suggest_command(task: str, think: bool = False) -> dict[str, str | None]:
-        """Write one shell command for the task, for this system, using a small model
-        that reads the installed man pages. Takes seconds to a minute; a capable agent
-        may do better with `docs` and `check`. `outside` is as in `check`. Doesn't
-        run the command."""
+        """Write one shell command for the task, for this system, using thetaterm's
+        model, which reads the installed man pages so you don't spend tokens on them.
+        Takes seconds to a minute. `outside` is as in `check`. Doesn't run the
+        command."""
         try:
             agent = Agent(
                 os.getenv("THETATERM_MODEL") or DEFAULT_MODEL,
