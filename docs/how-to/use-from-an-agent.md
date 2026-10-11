@@ -45,6 +45,10 @@ than your shell profile:
 THETATERM_MODEL=gemma4:e4b
 ```
 
+If you set `XDG_CONFIG_HOME` in your shell profile, the server doesn't see it
+and reads `~/.config/thetaterm/.env` instead. Set `XDG_CONFIG_HOME` in the
+client's `env` setting for the server too.
+
 The other settings work as in
 [How to use another model server](use-another-model-server.md). The other
 tools work without any model server.
@@ -59,5 +63,7 @@ thetaterm tools, how do I edit a file in place with sed here?" It should call
 
 - `install the MCP extra` in the client's log: the server was installed
   without the `mcp` extra. Run the install command above.
+- `warning: API key sent unencrypted to …` in the client's log: see
+  [Messages](../reference/messages.md).
 - `suggest_command` fails with `cannot reach …` or `model … not found`: see
   [Messages](../reference/messages.md). The other tools keep working.

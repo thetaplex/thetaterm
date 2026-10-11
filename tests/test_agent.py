@@ -58,7 +58,11 @@ def test_problem_catches_bad_commands():
     assert problem("find . -exec grep -l x {} ';' -print") is None
     assert "not found" in problem("ls | definitely_not_a_command_xyz")
     assert problem("echo 'unterminated") is not None
-    assert problem("") == "empty command"
+    assert problem("") == problem("  ") == "empty command"
+    assert "null byte" in problem("ls\x00 -l")
+    # `$`: the program is only known when it runs; inside `$(...)` it is known
+    assert problem("echo $(date) && $PAGER x") is None
+    assert "not found" in problem("echo $(definitely_not_a_command_xyz)")
 
 
 @pytest.mark.skipif(not shutil.which("zsh"), reason="needs zsh")

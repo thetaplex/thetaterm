@@ -37,6 +37,12 @@ def test_docs_rejects_options_and_unknown_programs_without_running_man(monkeypat
     assert ran == []
 
 
+def test_docs_without_a_man_page_or_note_is_an_error(monkeypatch):
+    monkeypatch.setattr(mcp, "reference", lambda program, task: "")
+    with pytest.raises(ToolError, match="no man page"):
+        call("docs", program="ls", task="list files")
+
+
 def test_check_reports_problem_and_outside_or_none():
     assert call("check", command="ls -l") == {"problem": None, "outside": None}
     assert call("check", command="no-such-program-xyz .")["problem"] == (
@@ -45,6 +51,7 @@ def test_check_reports_problem_and_outside_or_none():
     assert call("check", command="rm /tmp/x")["outside"] == "absolute path /tmp/x"
     unbalanced = call("check", command="echo 'x")
     assert unbalanced["problem"] and unbalanced["outside"] is None
+    assert "null byte" in call("check", command="ls\x00 -l")["problem"]
 
 
 def test_suggest_command_flags_outside_commands(monkeypatch):

@@ -3,7 +3,7 @@ from types import SimpleNamespace
 
 import typer
 
-from thetaterm.cli import process_query
+from thetaterm.cli import process_query, unencrypted
 
 
 def run(monkeypatch, command, yes, answer):
@@ -70,3 +70,10 @@ def test_bang_runs_the_users_own_command_without_the_model_or_a_question(monkeyp
     assert process_query(agent, "! ls ~/Downloads", yes=False) == 3
     assert process_query(agent, "!", yes=False) == 0
     assert ran == ["ls ~/Downloads"] and asked == []
+
+
+def test_only_a_key_sent_over_plain_http_to_another_host_is_unencrypted():
+    assert unencrypted("http://example.com/v1", "k")
+    assert not unencrypted("https://example.com/v1", "k")
+    assert not unencrypted("http://localhost:11434/v1", "k")
+    assert not unencrypted("http://example.com/v1", None)

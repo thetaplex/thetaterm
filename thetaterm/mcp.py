@@ -10,7 +10,7 @@ import shutil
 import sys
 
 from thetaterm.agent import Agent, environment, outside, problem, reference
-from thetaterm.cli import DEFAULT_BASE_URL, DEFAULT_MODEL  # importing loads CONFIG
+from thetaterm.cli import DEFAULT_BASE_URL, DEFAULT_MODEL, unencrypted  # loads CONFIG
 
 # a name that starts with - would reach man as an option, and `man -P` runs a pager
 PROGRAM = re.compile(r"[A-Za-z0-9][\w.+-]*")
@@ -41,7 +41,10 @@ def server():
         relevant to the task. Read it before using an option you're unsure of here."""
         if not PROGRAM.fullmatch(program) or not shutil.which(program):
             raise ToolError(f"{program}: not an installed program")
-        return reference(program, task)
+        text = reference(program, task)
+        if not text:  # an agent would read "" as nothing relevant
+            raise ToolError(f"{program}: no man page or note")
+        return text
 
     @app.tool(annotations=read_only)
     def check(command: str) -> dict[str, str | None]:
@@ -87,4 +90,7 @@ def main():
             "install the MCP extra: uv tool install 'thetaterm[mcp]'", file=sys.stderr
         )
         sys.exit(1)
+    base_url = os.getenv("THETATERM_BASE_URL") or DEFAULT_BASE_URL
+    if unencrypted(base_url, os.getenv("THETATERM_API_KEY")):
+        print(f"warning: API key sent unencrypted to {base_url}", file=sys.stderr)
     app.run()  # stdio

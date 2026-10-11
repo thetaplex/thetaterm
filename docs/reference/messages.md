@@ -76,3 +76,5 @@ Read the command before you answer. Declining is safe: nothing runs.
 `THETATERM_API_KEY` is set and the endpoint uses `http://` on a host other than
 `localhost`, `127.0.0.1` or `::1`. Anyone on the network path can read the key.
 Switch to an `https://` URL, or unset the key if the server doesn't need one.
+`tterm-mcp` prints this to standard error when it starts, so it appears in
+the MCP client's log.

@@ -24,6 +24,7 @@ one, then the parts of its installed man page that best match `task`, up to
 
 **Errors:** `PROGRAM: not an installed program` when `program` isn't the name
 of a program on `PATH`. Paths and names that start with `-` are refused too.
+`PROGRAM: no man page or note` when the program is installed but has neither.
 
 ## `check`
 

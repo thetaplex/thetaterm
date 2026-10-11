@@ -49,7 +49,7 @@ tterm-mcp = "thetaterm.mcp:main"
 
 [project.optional-dependencies]
 mcp = [
-    "mcp>=2.3.0",
+    "mcp>=2.3.0,<3",
 ]
 
 
