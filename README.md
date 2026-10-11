@@ -53,6 +53,7 @@ tterm -y -q "show git status"          # run without confirming
 tterm --think -q "show the date 30 days from now"   # model reasons first, about 2x slower
 tterm --version                        # installed version
 tterm --install-completion             # tab completion for your shell
+tterm-mcp                              # MCP server for AI agents, needs thetaterm[mcp]
 tterm --help
 ```
 
@@ -73,6 +74,9 @@ read from the environment or `~/.config/thetaterm/.env`, never from a `.env`
 in the current directory. See the
 [command-line reference](https://github.com/thetaplex/thetaterm/blob/main/docs/reference/cli.md) and
 [how to use another model server](https://github.com/thetaplex/thetaterm/blob/main/docs/how-to/use-another-model-server.md).
+
+To let an AI agent such as Claude Code use thetaterm, see
+[how to use thetaterm from an AI agent](https://github.com/thetaplex/thetaterm/blob/main/docs/how-to/use-from-an-agent.md).
 
 ## Documentation
 

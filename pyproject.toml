@@ -45,6 +45,12 @@ Changelog = "https://github.com/thetaplex/thetaterm/blob/main/CHANGELOG.md"
 
 [project.scripts]
 tterm = "thetaterm.cli:app"
+tterm-mcp = "thetaterm.mcp:main"
+
+[project.optional-dependencies]
+mcp = [
+    "mcp>=2.3.0",
+]
 
 
 [build-system]

@@ -7,7 +7,7 @@ default:
     @just --list
 
 setup:
-    uv sync --locked
+    uv sync --locked --all-extras
 
 test:
     uv run pytest
