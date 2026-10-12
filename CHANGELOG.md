@@ -7,6 +7,11 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### Fixed
+
+- `tterm-mcp` tells MCP clients its version when they connect, instead of an
+  empty string.
+
 ## [0.5.0] - 2026-10-11
 
 ### Added
