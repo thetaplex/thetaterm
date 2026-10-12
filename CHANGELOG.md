@@ -7,6 +7,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-10-12
+
 ### Fixed
 
 - `tterm-mcp` tells MCP clients its version when they connect, instead of an
@@ -143,7 +145,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Documentation in `docs/`: a tutorial, how-to guides, reference, explanation
   and architecture decision records.
 
-[Unreleased]: https://github.com/thetaplex/thetaterm/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/thetaplex/thetaterm/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/thetaplex/thetaterm/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/thetaplex/thetaterm/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/thetaplex/thetaterm/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/thetaplex/thetaterm/compare/v0.2.0...v0.3.0
