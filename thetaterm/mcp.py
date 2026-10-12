@@ -8,6 +8,7 @@ import os
 import re
 import shutil
 import sys
+from importlib.metadata import version as installed_version
 
 from thetaterm.agent import Agent, environment, outside, problem, reference
 from thetaterm.cli import DEFAULT_BASE_URL, DEFAULT_MODEL, unencrypted  # loads CONFIG
@@ -24,6 +25,7 @@ def server():
 
     app = MCPServer(
         "thetaterm",
+        version=installed_version("thetaterm"),
         instructions="Shell commands that are correct for this machine: its OS, "
         "whether its tools are GNU, BSD or BusyBox, and their installed man pages. "
         "Nothing here runs a command.",

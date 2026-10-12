@@ -2,6 +2,7 @@ import asyncio
 import json
 import subprocess
 import sys
+from importlib.metadata import version
 from pathlib import Path
 
 import pytest
@@ -105,4 +106,5 @@ def test_installed_script_answers_with_nothing_but_json_on_stdout():
     assert server.wait(timeout=30) == 0
     assert server.stdout.read() == ""
     assert [r["id"] for r in replies] == [1, 2]
+    assert replies[0]["result"]["serverInfo"]["version"] == version("thetaterm")
     assert "suggest_command" in {t["name"] for t in replies[1]["result"]["tools"]}
