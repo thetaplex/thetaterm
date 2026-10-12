@@ -71,3 +71,17 @@
     # --merged main lists main itself; unless it is filtered out, it gets deleted
     - type: regex
       value: '\be?grep\s+(-\w+\s+)*-\w*v\w*\s+(-\w+\s+)*([''"][^''"]*\bmain\b|[^\s|]*\bmain\b)'
+
+# --- text processing ---
+
+# gemma4:e4b-mlx summed wc's total line in on 2026-10-11, through tterm-mcp
+- vars: { query: total number of lines in all .txt files }
+  assert:
+    - type: python
+      value: |
+        import re
+        # wc prints a total line after the per-file ones, so summing its output counts twice
+        summed = re.search(r"\bwc\b[^|]*\|\s*awk\b.*\+=", output)
+        # blank lines are lines too
+        nonblank = re.search(r"\bgrep\s+(-\w+\s+)*['\"]?(\.|\^\$)", output)
+        return ".txt" in output and not summed and not nonblank
