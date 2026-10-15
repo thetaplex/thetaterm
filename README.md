@@ -1,4 +1,4 @@
-# thetaterm
+# ThetaTerm
 
 Supercharge your terminal with AI: describe what you want, get a shell command
 that is correct for *your* system, confirm, run.
