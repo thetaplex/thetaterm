@@ -1,6 +1,6 @@
 [project]
 name = "thetaterm"
-version = "0.5.1"
+version = "0.5.2"
 description = "Supercharge your terminal with AI"
 readme = "README.md"
 authors = [{ name = "ThetaPlex", email = "support@thetaplex.com" }]
