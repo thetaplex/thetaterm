@@ -233,6 +233,17 @@
     - type: not-regex
       value: '\$[1-9]|\bcut\b'
 
+- vars: { query: total number of lines in all .txt files }
+  assert:
+    - type: python
+      value: |
+        import re
+        # wc prints a total line after the per-file ones, so summing its output counts twice
+        summed = re.search(r"\bwc\b[^|]*\|\s*awk\b.*\+=", output)
+        # blank lines are lines too
+        nonblank = re.search(r"\bgrep\s+(-\w+\s+)*['\"]?(\.|\^\$)", output)
+        return ".txt" in output and not summed and not nonblank
+
 - vars: { query: count how many lines in app.log contain error }
   assert:
     - type: python

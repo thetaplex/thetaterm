@@ -7,6 +7,14 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### Fixed
+
+- A note for `wc`: with more than one file it prints a total line, so adding
+  up its output counts every line twice, and blank lines count. Asked for the
+  total lines in all `.txt` files 5 times, `gemma4:e4b-mlx` summed the total
+  line in once and skipped blank lines once without the note, and did neither
+  with it.
+
 ## [0.5.1] - 2026-10-12
 
 ### Fixed
