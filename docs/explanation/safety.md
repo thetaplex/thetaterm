@@ -13,7 +13,7 @@ answer. Nothing else on this page replaces that.
 ## What the checks do
 
 Before you see a command, thetaterm checks that it's valid shell syntax and
-that every program it calls is installed. These checks exist to catch commands
+that every program it calls is installed and has the options it's given. These checks exist to catch commands
 that can't work, so the model can try again. **They don't judge whether a
 command is safe.** `rm -rf .` passes them.
 

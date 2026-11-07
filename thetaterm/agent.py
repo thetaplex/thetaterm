@@ -6,6 +6,7 @@ says which are installed, and the man pages of the first two go into the
 prompt. The model only has to read and fill in.
 """
 
+import functools
 import json
 import math
 import os
@@ -107,8 +108,67 @@ def reference(command: str, query: str) -> str:
     """
     head = note(command)
     head = f"Notes:\n{head}\n\n" if head else ""
+    return head + excerpt(man_page(command), query, MAX_REFERENCE_CHARS - len(head))
+
+
+@functools.cache
+def man_page(command: str) -> str:
+    """The installed man page as plain text, "" if there is none."""
     text = re.sub(r".\x08", "", sh(["man", command]).stdout)  # strip overstrike bold
-    return head + excerpt(text, query, MAX_REFERENCE_CHARS - len(head))
+    # groff may print an option's dash as a hyphen or minus sign
+    return text.translate({0x2010: "-", 0x2212: "-"})
+
+
+# -x as a word of its own: -a, -B blocksize, -v[+|-]val; not -type or --all
+SHORT_OPTION = re.compile(r"(?<![\w-])-([\w@%,])(?![\w-])")
+# -Aclnx in [-Aclnx], -H in [-H | -L]
+CLUSTER = re.compile(r"(?<![\w-])-([\w@%,]+)")
+# documented with an argument: -d depth, -v[+|-]val, -k, --key=KEYDEF, -o, --output <file>
+WITH_ARGUMENT = re.compile(
+    r"(?<![\w-])-([\w@%])(?:,\s*--[\w-]+)?(?:[=\[<]| (?:[a-z<\[]|[A-Z]{2}))"
+)
+
+
+def scan_options(page: str, args: list[str]) -> tuple[str | None, int]:
+    """The first short option the man page doesn't list, and where options end.
+
+    Options end at the first operand, `--` or `-`, as BSD getopt reads them; GNU
+    lets options follow operands, and those go unchecked. Any option on the page
+    counts, even one only named in passing: a page that leaves one out of its
+    SYNOPSIS (BSD grep's -r) mustn't turn a working command away.
+    """
+    synopsis = re.search(r"^SYNOPSIS\n(.*?)^\S", page, re.MULTILINE | re.DOTALL)
+    synopsis = synopsis[1] if synopsis else ""
+    flags = set(SHORT_OPTION.findall(page))
+    flags |= {c for cluster in CLUSTER.findall(synopsis) for c in cluster}
+    # only the synopsis and entries: "the -a option" in prose takes no argument
+    entries = [line for line in page.splitlines() if line.lstrip().startswith("-")]
+    with_argument = set(WITH_ARGUMENT.findall("\n".join([synopsis, *entries])))
+    i = 0
+    while i < len(args):
+        word = args[i]
+        if word == "--":
+            return None, i + 1
+        if not word.startswith("-") or word == "-":
+            return None, i
+        i += 1
+        # ponytail: long options go unchecked; GNU-only ones get through
+        # spelled out on the page: java -version, clang -O2
+        if (
+            not flags
+            or word.startswith("--")
+            or re.fullmatch(r"-\d+", word)  # an old-style count: head -5
+            or len(word) > 2
+            and re.search(rf"(?<![\w-]){re.escape(word)}(?![\w-])", page)
+        ):
+            continue
+        for j, c in enumerate(word[1:], 1):
+            if c not in flags:
+                return f"-{c}", i - 1
+            if c in with_argument:
+                i += j == len(word) - 1  # its argument is the next word
+                break
+    return None, i
 
 
 def entries(text: str) -> list[tuple[int, str]]:
@@ -261,6 +321,59 @@ def problem(command: str) -> str | None:
             ):
                 return f"{token}: command not found"
             at_command = False
+    return bad_option(words)
+
+
+def bad_option(words: list[str]) -> str | None:
+    """Why a program in the command would reject an option, or None."""
+    commands, current = [], []
+    for word in words:
+        if word in {"|", "||", "&&", ";", "&", "(", ")", "{", "}"} or word.startswith(
+            ("<", ">")
+        ):
+            commands.append(current)
+            current = []
+        else:
+            current.append(word)
+    commands.append(current)
+    while commands:
+        args = commands.pop()
+        while args and (re.match(r"\w+=", args[0]) or args[0] in PREFIXES):
+            args = args[1:]
+        if not args:
+            continue
+        program, args = args[0], args[1:]
+        # a builtin, function or alias prints its name, not a path; their man
+        # page, if any, is another program's
+        found = sh([SHELL, "-c", f"command -v {shlex.quote(program)}"]).stdout
+        if not found.startswith("/"):
+            continue
+        page = man_page(program)
+        option, end = scan_options(page, args)
+        if option:
+            return f"{program} has no {option} option on this system (see its man page)"
+        # the programs they run
+        if os.path.basename(program) == "xargs":
+            commands.append(args[end:])
+        if os.path.basename(program) == "find":
+            # its tests (-type, -printf) follow the paths, as words on its page
+            i = end
+            while i < len(args):
+                word, i = args[i], i + 1
+                if word in {"-exec", "-execdir", "-ok", "-okdir"}:
+                    # problem() turned \; into _
+                    stop = next(
+                        (k for k in range(i, len(args)) if args[k] in {"_", "+"}),
+                        len(args),
+                    )
+                    commands.append(args[i:stop])
+                    i = stop + 1
+                elif (
+                    page
+                    and re.fullmatch(r"-[a-z]+", word)
+                    and not re.search(rf"(?<![\w-]){word}(?![\w-])", page)
+                ):
+                    return f"find has no {word} test on this system (see its man page)"
     return None
 
 
