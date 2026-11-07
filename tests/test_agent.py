@@ -20,6 +20,7 @@ from thetaterm.agent import (
     keywords,
     outside,
     problem,
+    scan_options,
     user_shell,
 )
 
@@ -63,6 +64,78 @@ def test_problem_catches_bad_commands():
     # `$`: the program is only known when it runs; inside `$(...)` it is known
     assert problem("echo $(date) && $PAGER x") is None
     assert "not found" in problem("echo $(definitely_not_a_command_xyz)")
+
+
+# BSD du's page, cut down: a synopsis, entries, and options named in prose
+DU_PAGE = """DU(1)                General Commands Manual                DU(1)
+
+NAME
+     du \u2013 display disk usage statistics
+
+SYNOPSIS
+     du [--libxo] [-Aclnx] [-H | -L | -P] [-g | -h | -k | -m] [-a | -s | -d depth]
+        [-B blocksize] [-I mask] [-t threshold] [file ...]
+
+DESCRIPTION
+     -B blocksize
+             Calculate block counts in blocksize byte blocks.  This is different
+             from the -h, -k, -m, --si and -g options.
+
+     -d depth
+             Display an entry for all files and directories depth directories deep.
+
+     -r      Generate messages about directories that cannot be read.
+
+     -v[+|-]val
+             Adjust the value.
+
+     -long   A single-dash long option.
+"""
+
+
+def test_scan_options_rejects_what_the_page_does_not_list():
+    assert scan_options(DU_PAGE, ["-b", "."]) == ("-b", 0)
+    assert scan_options(DU_PAGE, ["-ab", "."])[0] == "-b"
+    assert scan_options(DU_PAGE, ["-a", "-b"])[0] == "-b"
+    # a flag with an argument consumes the rest of its word, or the next word
+    assert scan_options(DU_PAGE, ["-d", "-b", "-x"]) == (None, 3)
+    assert scan_options(DU_PAGE, ["-d1", "-b"])[0] == "-b"
+    assert scan_options(DU_PAGE, ["-Bb", "x"]) == (None, 1)
+    assert scan_options(DU_PAGE, ["-v-1d", "x"]) == (None, 1)
+
+
+def test_scan_options_accepts_what_the_page_lists():
+    # synopsis clusters, entries, and options only named in prose (-r)
+    assert scan_options(DU_PAGE, ["-Aclnx", "-sh", "-r", "-k", "."]) == (None, 4)
+    # a word spelled out on the page, a count, and long options (unchecked)
+    assert scan_options(DU_PAGE, ["-long", "-5", "--si", "--max-depth=1"]) == (None, 4)
+    # options stop at the first operand, at -- and at -, as with BSD getopt
+    assert scan_options(DU_PAGE, [".", "-b"]) == (None, 0)
+    assert scan_options(DU_PAGE, ["--", "-b"]) == (None, 1)
+    assert scan_options(DU_PAGE, ["-", "-b"]) == (None, 0)
+    # no man page, nothing to check against
+    assert scan_options("", ["-b"]) == (None, 1)
+
+
+def test_problem_rejects_options_the_man_page_lacks(monkeypatch):
+    monkeypatch.setattr(agent, "man_page", lambda c: DU_PAGE if c == "du" else "")
+    for command in (
+        "du -b . | sort -nr",
+        "find . -type f -print0 | xargs -0 du -b | sort -nr | head -n 1",
+        "find . -type f -exec du -b {} + | sort -nr",
+        "find . -type f -exec du -b {} \\; | sort -nr",
+        "ls && sudo du -b 2>/dev/null",
+    ):
+        assert "-b" in (problem(command) or ""), command
+    assert problem("find . -type f -exec du -k {} + | sort -nr") is None
+
+
+def test_problem_checks_finds_tests_against_its_page(monkeypatch):
+    page = "SYNOPSIS\n     find [-H] path ... [expression]\nPRIMARIES\n     -type t\n     -mtime n\n     -exec\n"
+    monkeypatch.setattr(agent, "man_page", lambda c: page if c == "find" else "")
+    assert "-printf" in problem("find . -type f -printf '%s %p'")
+    # an -exec command's options are its own, and numbers are arguments
+    assert problem("find . -type f -mtime -7 -exec ls -printf {} +") is None
 
 
 @pytest.mark.skipif(not shutil.which("zsh"), reason="needs zsh")
