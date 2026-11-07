@@ -46,6 +46,8 @@ failure:
 | Reason | Meaning |
 |---|---|
 | `<name>: command not found` | the command uses a program that isn't installed |
+| `<name> has no -<x> option on this system` | the program's man page doesn't list the option; often a GNU option on BSD |
+| `find has no -<test> test on this system` | find's man page doesn't list the test, such as GNU find's `-printf` on BSD |
 | a shell syntax error | the command isn't valid shell |
 | `No closing quotation` | the quotes don't match |
 | `empty command` | the model gave no command |
