@@ -58,6 +58,9 @@ Agent.choose = traced("choose", lambda a, kw, r: {"chosen": r})(Agent.choose)
 agent_module.reference = traced(
     "reference", lambda a, kw, r: {"command": a[0], "chars": len(r), "reference": r}
 )(agent_module.reference)
+agent_module.format_skills = traced(
+    "skills", lambda a, kw, r: {"chars": len(r), "skills": r}
+)(agent_module.format_skills)
 agent_module.problem = traced(
     "problem", lambda a, kw, r: {"command": a[0], "problem": r or "none"}
 )(agent_module.problem)
@@ -75,8 +78,18 @@ def call_api(prompt, options, context):
         span.set_attribute("gen_ai.request.model", model)
         span.set_attribute("query", prompt)
         thinking = bool(options.get("config", {}).get("thinking"))
+        use_skills = options.get("config", {}).get("use_skills", True)
+        skills_dir = options.get("config", {}).get("skills_dir")
         span.set_attribute("thinking", thinking)
-        agent = Agent(model, base_url, os.getenv("THETATERM_API_KEY"), thinking)
+        span.set_attribute("use_skills", bool(use_skills))
+        agent = Agent(
+            model,
+            base_url,
+            os.getenv("THETATERM_API_KEY"),
+            thinking,
+            skills_dir=skills_dir,
+            use_skills=bool(use_skills),
+        )
         try:
             command = agent.generate(prompt)
         except RuntimeError as e:

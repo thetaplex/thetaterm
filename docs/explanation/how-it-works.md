@@ -44,10 +44,9 @@ gets no reference for it. thetaterm never runs a program to read its docs, such 
 `--help`, because not every program honours that flag
 ([ADR 0005](../adr/0005-never-run-a-program-to-read-its-docs.md)).
 
-Some programs also have a short note that ships with thetaterm, for facts the
-excerpt tends to miss, such as `awk` splitting fields on spaces, not commas.
-The note goes first and shares the 3,500 characters with the excerpt
-([ADR 0006](../adr/0006-put-a-short-note-before-the-man-page-excerpt.md)).
+Matching skills from `thetaterm/skills/` (or `~/.config/thetaterm/skills/`),
+brewed and validated via `just upskill`, are added in `<skill>` tags after the
+man page excerpts.
 
 **Write the command.** The model gets the system line, the excerpts, the rules
 and your request, each in its own tag, such as `<reference>`, so a man page

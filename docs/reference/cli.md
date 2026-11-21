@@ -91,6 +91,6 @@ repository's [`.env.example`](../../.env.example) lists every setting.
 | Time allowed per model request | 300 s |
 | Attempts to produce a command that passes the checks | 3 |
 | Programs whose man page goes in the prompt | 2 |
-| Reference size, per program: note plus man page excerpt | 3,500 characters |
-| Note size | 600 characters |
+| Reference size, per program (man page excerpt) | 3,500 characters |
+| Skills budget, combined (up to 2 matching skills) | 1,800 characters |
 | Time allowed for a `man` lookup | 10 s |

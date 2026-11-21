@@ -9,14 +9,22 @@ prompts:
 providers:
   - id: file://../provider.py
     enabled: true
+    label: gemma4:e4b-mlx
+    config: { model: gemma4:e4b-mlx }
+  - id: file://../provider.py
+    enabled: false
+    label: gemma4:e4b-mlx-no-skills
+    config: { model: gemma4:e4b-mlx, use_skills: false }
+  - id: file://../provider.py
+    enabled: false
     label: gemma4:e4b
     config: { model: gemma4:e4b }
   - id: file://../provider.py
-    enabled: true
+    enabled: false
     label: qwen3.5:4b
     config: { model: qwen3.5:4b }
   - id: file://../provider.py
-    enabled: true
+    enabled: false
     label: granite4.1:8b
     config: { model: granite4.1:8b }
 

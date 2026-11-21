@@ -29,6 +29,7 @@ Other runs:
 ```bash
 just eval local regression    # only queries some model has failed before
 just eval local git           # git through a regular development flow
+just eval --all               # every file in evals/promptfoo/tests/, one after another
 just eval cloud               # Ollama Cloud models
 ```
 
@@ -89,19 +90,16 @@ viewer.
 4. Run `just eval` and check the new query passes or fails for the reason you
    expect.
 
-## Fix a failure with a note
+## Fix a failure with UpSkill
 
-If a model fails because the man page excerpt left out a fact about the
-program, add a note for it:
+If a model fails a query, brew and validate a `SKILL.md` with the Ralph Loop:
 
-1. Write the fact in `thetaterm/notes/<program>.md`, in 600 characters or
-   fewer. If GNU and BSD differ, say which is which.
-2. Write facts, never an example command. "Fields are split on spaces and
-   tabs; -F sets the separator" is a note. Any command line, even one unlike
-   the query, is an example, and `just test` rejects it.
-3. Run `just eval` and check the query now passes and nothing else fails.
+```bash
+just upskill tests
+```
 
-See [ADR 0006](../adr/0006-put-a-short-note-before-the-man-page-excerpt.md).
+Validated skills are saved under `thetaterm/skills/<category>/<skill_name>/SKILL.md`
+and loaded automatically by keyword and program matching.
 
 ## Files
 
