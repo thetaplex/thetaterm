@@ -17,8 +17,9 @@ import shutil
 import subprocess
 import urllib.error
 import urllib.request
-from importlib.resources import files
 from urllib.parse import urlsplit
+
+from thetaterm.skills import format_skills
 
 # problem() and outside() read commands as sh words, so only shells that parse like sh
 POSIX_SHELLS = {"sh", "bash", "zsh", "ksh", "dash"}
@@ -41,8 +42,6 @@ STOPWORDS = set(_STOPWORDS.split())
 # `!` negates a pipeline in command position; elsewhere (find ! -name) it is an argument
 PREFIXES = {"sudo", "env", "time", "nohup", "command", "!"}
 MAX_REFERENCE_CHARS = 3500
-# a note leaves most of the reference to the man page
-MAX_NOTE_CHARS = 600
 RETRIES = 2
 # devices that hold no files; anything else under /dev (disks) counts as outside
 SAFE_DEVICE = re.compile(r"/dev/(null|zero|u?random|tty|std(in|out|err)|fd/\d+)")
@@ -94,21 +93,13 @@ def keywords(query: str) -> list[str]:
     ]
 
 
-def note(command: str) -> str:
-    """Our note on what the command's man page excerpt tends to miss (ADR 0006)."""
-    path = files("thetaterm") / "notes" / f"{command}.md"
-    return path.read_text().strip() if path.is_file() else ""
-
-
 def reference(command: str, query: str) -> str:
-    """The command's note, then the parts of its man page relevant to the query.
+    """The parts of the command's man page relevant to the query.
 
     Never `command --help`: a program that doesn't honour it would run before
     the user agreed to anything (ADR 0005).
     """
-    head = note(command)
-    head = f"Notes:\n{head}\n\n" if head else ""
-    return head + excerpt(man_page(command), query, MAX_REFERENCE_CHARS - len(head))
+    return excerpt(man_page(command), query, MAX_REFERENCE_CHARS)
 
 
 @functools.cache
@@ -386,6 +377,8 @@ class Agent:
         base_url: str,
         api_key: str | None = None,
         thinking: bool = False,
+        skills_dir: str | os.PathLike[str] | None = None,
+        use_skills: bool = True,
     ):
         # urlopen also reads file: and ftp: URLs; only talk to a server
         if urlsplit(base_url).scheme not in {"http", "https"}:
@@ -400,6 +393,8 @@ class Agent:
         # Dropped if the server rejects it.
         self.thinking = thinking
         self.thinking_off = {} if thinking else {"reasoning_effort": "none"}
+        self.skills_dir = skills_dir
+        self.use_skills = use_skills
 
     def ask(self, prompt: str, max_tokens: int | None = None) -> str:
         body = {
@@ -466,9 +461,16 @@ class Agent:
         # a thinking model works out the platform's flags itself; the extra
         # round trip and man page only slow it down (evals: 49/50 vs 48/50)
         # best last, nearest the rules and task
-        for chosen in [] if self.thinking else reversed(self.choose(query)):
+        chosen_programs = [] if self.thinking else self.choose(query)
+        for chosen in reversed(chosen_programs):
             ref = reference(chosen, query)
             prompt += f"\n<reference>\n{ref}\n</reference>\n"
+        if not self.thinking and self.use_skills:
+            skills_text = format_skills(
+                query, chosen_programs, skills_dir=self.skills_dir
+            )
+            if skills_text:
+                prompt += f"\n<skill>\n{skills_text}\n</skill>\n"
         prompt += (
             f"\n<rules>\nWrite one {os.path.basename(SHELL)} command for this system. "
             "Use real paths, never placeholders like /path/to; if the task names no location, use the current directory (.). "

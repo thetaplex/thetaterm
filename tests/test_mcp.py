@@ -38,7 +38,7 @@ def test_docs_rejects_options_and_unknown_programs_without_running_man(monkeypat
     assert ran == []
 
 
-def test_docs_without_a_man_page_or_note_is_an_error(monkeypatch):
+def test_docs_without_a_man_page_is_an_error(monkeypatch):
     monkeypatch.setattr(mcp, "reference", lambda program, task: "")
     with pytest.raises(ToolError, match="no man page"):
         call("docs", program="ls", task="list files")

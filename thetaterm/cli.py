@@ -1,6 +1,8 @@
+import json
 import os
 import subprocess
 import sys
+from datetime import UTC, datetime
 from importlib.metadata import version as installed_version
 from pathlib import Path
 from typing import Annotated
@@ -14,9 +16,9 @@ from thetaterm.agent import SHELL, Agent, outside
 
 # Per-user config only: a .env in the working directory could be a cloned repo's,
 # and would get to pick the endpoint our API key is sent to.
-CONFIG = (
-    Path(os.getenv("XDG_CONFIG_HOME") or Path.home() / ".config") / "thetaterm" / ".env"
-)
+CONFIG_DIR = Path(os.getenv("XDG_CONFIG_HOME") or Path.home() / ".config") / "thetaterm"
+CONFIG = CONFIG_DIR / ".env"
+FAILURES_LOG = CONFIG_DIR / "failures.jsonl"
 load_dotenv(CONFIG)
 
 app = typer.Typer()
@@ -43,7 +45,38 @@ def run(command: str) -> int:
         return 130
 
 
-def process_query(agent: Agent, query: str, yes: bool) -> int:
+def log_failure(
+    agent: Agent,
+    query: str,
+    command: str,
+    reason: str,
+    error: str = "",
+    note: str = "",
+) -> None:
+    """Append one local failure record to failures.jsonl, for `just upskill-failures`."""
+    FAILURES_LOG.parent.mkdir(parents=True, exist_ok=True)
+    record = {
+        "ts": datetime.now(tz=UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "model": agent.model,
+        "env": agent.env,
+        "query": query,
+        "command": command,
+        "reason": reason,
+        "error": error,
+        "note": note,
+        "resolved": False,
+    }
+    with FAILURES_LOG.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(record) + "\n")
+
+
+def process_query(
+    agent: Agent,
+    query: str,
+    yes: bool,
+    log_failures: bool = False,
+    last: dict[str, str] | None = None,
+) -> int:
     """Generate a command for the query, confirm it, run it. Returns its exit code."""
     # `!cmd` is the user's own command, as in a shell: run as typed, no model, no question
     if query.startswith("!"):
@@ -54,9 +87,15 @@ def process_query(agent: Agent, query: str, yes: bool) -> int:
             command = agent.generate(query)
     except RuntimeError as e:
         console.print(str(e), style="red", markup=False)
+        if log_failures:
+            log_failure(agent, query, "", "generate_error", error=str(e))
         return 1
     except KeyboardInterrupt:  # back to the > prompt, no traceback
         return 130
+
+    if last is not None:
+        last["query"] = query
+        last["command"] = command
 
     # markup=False: `grep [abc] f` must show its brackets, and `[conceal]` mustn't
     # hide words, or the command you approve isn't the one that runs
@@ -68,8 +107,13 @@ def process_query(agent: Agent, query: str, yes: bool) -> int:
             f"leaves the current directory: {reason}", style="red", markup=False
         )
     if (reason or not yes) and not typer.confirm("Run it?", default=not reason):
+        if log_failures:
+            log_failure(agent, query, command, "declined")
         return 0
-    return run(command)
+    rc = run(command)
+    if log_failures and rc not in (0, 130):
+        log_failure(agent, query, command, f"exit:{rc}")
+    return rc
 
 
 def show_version(value: bool):
@@ -94,6 +138,14 @@ def tterm(
     ] = False,
     think: Annotated[
         bool, typer.Option("--think", help="Let the model reason first: slower")
+    ] = False,
+    log_failures: Annotated[
+        bool,
+        typer.Option(
+            "--log-failures",
+            envvar="THETATERM_LOG_FAILURES",
+            help="Log declined/failed commands locally to ~/.config/thetaterm/failures.jsonl",
+        ),
     ] = False,
     version: Annotated[
         bool,
@@ -121,20 +173,30 @@ def tterm(
         console.print(f"THETATERM_BASE_URL={e}", style="red", markup=False)
         sys.exit(2)
     if query is not None:
-        sys.exit(process_query(agent, query, yes))
+        sys.exit(process_query(agent, query, yes, log_failures=log_failures))
 
     console.print(f"[bold cyan]thetaterm[/bold cyan] · {model} · {agent.env}")
     console.print(
-        "[dim]Describe what you want, or !command to run one. Ctrl-D to exit.[/dim]"
+        "[dim]Describe what you want, !command to run one, ?bad [note] to log last command. Ctrl-D to exit.[/dim]"
     )
+    last: dict[str, str] = {}
     while True:
         try:
             line = input("\n> ").strip()
         except (EOFError, KeyboardInterrupt):
             console.print()
             return
-        if line:
-            process_query(agent, line, yes)
+        if line.startswith("?bad"):
+            if not last:
+                console.print("nothing to log yet", style="yellow")
+            else:
+                note = line[4:].strip()
+                log_failure(
+                    agent, last["query"], last["command"], "user_marked", note=note
+                )
+                console.print(f"logged failure to {FAILURES_LOG}", style="dim")
+        elif line:
+            process_query(agent, line, yes, log_failures=log_failures, last=last)
 
 
 if __name__ == "__main__":

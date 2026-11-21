@@ -1,12 +1,15 @@
+import json
 import subprocess
+from pathlib import Path
 from types import SimpleNamespace
 
 import typer
 
+from thetaterm import cli
 from thetaterm.cli import process_query, unencrypted
 
 
-def run(monkeypatch, command, yes, answer):
+def run(monkeypatch, command, yes, answer, log_failures=False):
     """process_query on a fake agent; returns (confirm defaults asked, commands run)."""
     asked, ran = [], []
 
@@ -20,7 +23,8 @@ def run(monkeypatch, command, yes, answer):
 
     monkeypatch.setattr(typer, "confirm", confirm)
     monkeypatch.setattr(subprocess, "run", fake_run)
-    process_query(SimpleNamespace(generate=lambda query: command), "q", yes)
+    agent = SimpleNamespace(generate=lambda query: command, model="m", env="e")
+    process_query(agent, "q", yes, log_failures=log_failures)
     return asked, ran
 
 
@@ -77,3 +81,51 @@ def test_only_a_key_sent_over_plain_http_to_another_host_is_unencrypted():
     assert not unencrypted("https://example.com/v1", "k")
     assert not unencrypted("http://localhost:11434/v1", "k")
     assert not unencrypted("http://example.com/v1", None)
+
+
+def test_failure_logging_is_opt_in_and_captures_declines_errors_and_nonzero(
+    tmp_path: Path, monkeypatch
+):
+    log_path = tmp_path / "failures.jsonl"
+    monkeypatch.setattr(cli, "FAILURES_LOG", log_path)
+
+    # Off by default: nothing written on decline
+    run(monkeypatch, "ls -z", yes=False, answer=False)
+    assert not log_path.exists()
+
+    # On: records decline, non-zero exit (not 130), and generate error
+    run(monkeypatch, "ls -z", yes=False, answer=False, log_failures=True)
+
+    monkeypatch.setattr(
+        subprocess, "run", lambda cmd, **k: SimpleNamespace(returncode=2)
+    )
+    process_query(
+        SimpleNamespace(generate=lambda q: "badcmd", model="m", env="e"),
+        "q2",
+        yes=True,
+        log_failures=True,
+    )
+
+    monkeypatch.setattr(
+        subprocess, "run", lambda cmd, **k: SimpleNamespace(returncode=130)
+    )
+    process_query(
+        SimpleNamespace(generate=lambda q: "sleep 9", model="m", env="e"),
+        "q3",
+        yes=True,
+        log_failures=True,
+    )
+
+    def boom(q):
+        raise RuntimeError("no working command")
+
+    process_query(
+        SimpleNamespace(generate=boom, model="m", env="e"),
+        "q4",
+        yes=True,
+        log_failures=True,
+    )
+
+    rows = [json.loads(line) for line in log_path.read_text().splitlines()]
+    assert [r["reason"] for r in rows] == ["declined", "exit:2", "generate_error"]
+    assert all(r["resolved"] is False for r in rows)

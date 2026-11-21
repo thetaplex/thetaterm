@@ -4,7 +4,7 @@ Date: 2026-10-01
 
 ## Status
 
-Accepted
+Superseded by [ADR 0010](0010-brew-skills-from-failures-with-upskill.md)
 
 Amends [ADR 0001](0001-read-docs-from-the-installed-system.md)
 

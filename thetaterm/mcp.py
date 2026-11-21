@@ -39,13 +39,13 @@ def server():
 
     @app.tool(annotations=read_only)
     def docs(program: str, task: str) -> str:
-        """thetaterm's note on the installed program, then the parts of its man page
-        relevant to the task. Read it before using an option you're unsure of here."""
+        """The parts of the installed program's man page relevant to the task.
+        Read it before using an option you're unsure of here."""
         if not PROGRAM.fullmatch(program) or not shutil.which(program):
             raise ToolError(f"{program}: not an installed program")
         text = reference(program, task)
         if not text:  # an agent would read "" as nothing relevant
-            raise ToolError(f"{program}: no man page or note")
+            raise ToolError(f"{program}: no man page")
         return text
 
     @app.tool(annotations=read_only)

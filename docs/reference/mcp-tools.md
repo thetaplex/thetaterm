@@ -18,13 +18,13 @@ The [system description](glossary.md): OS, userland and shell, for example
 
 ## `docs`
 
-The [reference](glossary.md) for `program`: thetaterm's note on it, if there is
-one, then the parts of its installed man page that best match `task`, up to
-3,500 characters. It reads the man page and never runs the program.
+The [reference](glossary.md) for `program`: the parts of its installed man page
+that best match `task`, up to 3,500 characters. It reads the man page and never
+runs the program.
 
 **Errors:** `PROGRAM: not an installed program` when `program` isn't the name
 of a program on `PATH`. Paths and names that start with `-` are refused too.
-`PROGRAM: no man page or note` when the program is installed but has neither.
+`PROGRAM: no man page` when the program is installed but has none.
 
 ## `check`
 

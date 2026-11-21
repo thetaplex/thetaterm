@@ -20,13 +20,12 @@ Their options differ.
 up to three, and thetaterm takes the first two installed.
 
 **Reference**: The parts of a chosen command's man page that best
-match the request, put in the prompt, after the command's note if it has one.
-Each chosen command has its own.
+match the request, put in the prompt. Each chosen command has its own.
 _Avoid:_ context, docs.
 
-**Note**: A few lines thetaterm ships about a program, for facts its man page
-excerpt tends to miss. It goes first in the reference.
-_Avoid:_ hint, tip.
+**Skill**: A `SKILL.md` file shipped in `thetaterm/skills/` (or in
+`~/.config/thetaterm/skills/`), matched by trigger keywords and chosen programs
+and placed in `<skill>` tags in the prompt.
 
 **Checks**: What a command must pass before you're asked to run it: valid shell syntax,
 and every program it calls is installed.

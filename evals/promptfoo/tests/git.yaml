@@ -247,7 +247,7 @@
     - type: regex
       value: '\bgit\s+log\b.*--grep[= ]["'']?fix login'
 
-- vars: { query: count commits per author, most first }
+- vars: { query: "count commits per author, most first" }
   assert:
     - type: regex
       value: '\bgit\s+shortlog\b.*(-\w*s\w*n|-\w*n\w*s|--summary\b.*--numbered|--numbered\b.*--summary)'
@@ -278,7 +278,7 @@
     - type: regex
       value: '\bgit\s+clone\b.*--depth[= ]1\b.*github\.com/org/repo\.git|\bgit\s+clone\b.*github\.com/org/repo\.git.*--depth[= ]1\b'
 
-- vars: { query: initialize and update all git submodules, including nested ones }
+- vars: { query: "initialize and update all git submodules, including nested ones" }
   assert:
     - type: python
       value: |
