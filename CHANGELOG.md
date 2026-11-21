@@ -7,6 +7,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-21
+
 ### Added
 
 - The command check rejects a short option that isn't on the program's man
@@ -14,8 +16,29 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
   that aren't on find's, and the model tries again. Asked for the largest file
   10 times on macOS, `gemma4:e4b-mlx` wrote the GNU-only `du -b` 6 times
   without the check, and no missing option with it.
-- A note for `du`: `-b` and `--max-depth` are GNU only, and BSD du has no
-  option for bytes.
+- Skills: `SKILL.md` files in `thetaterm/skills/` or
+  `~/.config/thetaterm/skills/`. Up to two whose trigger keywords match the
+  request go in the prompt after the man page excerpts, in 1,800 characters
+  or fewer. thetaterm ships 18, for tar, du, ls, git, line counts and HTTP headers
+  ([ADR 0010](docs/adr/0010-brew-skills-from-failures-with-upskill.md)).
+- `--log-failures` (or `THETATERM_LOG_FAILURES=1`) writes commands you decline,
+  commands that fail, and model errors to `~/.config/thetaterm/failures.jsonl`.
+  The log stays on your machine. In a session, `?bad [note]` logs the last
+  command.
+- `just upskill-failures` brews a skill for each logged failure you choose,
+  and `just upskill <file>` for the failing queries in an eval file. A skill is
+  saved only if the model then passes with it.
+- `just eval --all` runs every eval file.
+
+### Changed
+
+- The MCP `docs` tool now returns only the man page excerpt. Its error for a
+  program with no man page is `PROGRAM: no man page`.
+
+### Removed
+
+- The notes for `awk`, `curl`, `grep`, `ping`, `ps`, `sed` and `wc`. Skills
+  replace them ([ADR 0010](docs/adr/0010-brew-skills-from-failures-with-upskill.md)).
 
 ## [0.5.2] - 2026-10-16
 
@@ -165,7 +188,8 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Documentation in `docs/`: a tutorial, how-to guides, reference, explanation
   and architecture decision records.
 
-[Unreleased]: https://github.com/thetaplex/thetaterm/compare/v0.5.2...HEAD
+[Unreleased]: https://github.com/thetaplex/thetaterm/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/thetaplex/thetaterm/compare/v0.5.2...v0.6.0
 [0.5.2]: https://github.com/thetaplex/thetaterm/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/thetaplex/thetaterm/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/thetaplex/thetaterm/compare/v0.4.0...v0.5.0

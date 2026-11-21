@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 2
 requires-python = ">=3.13"
 resolution-markers = [
     "python_full_version >= '3.14'",
@@ -1035,7 +1035,7 @@ wheels = [
 
 [[package]]
 name = "thetaterm"
-version = "0.5.2"
+version = "0.6.0"
 source = { editable = "." }
 dependencies = [
     { name = "python-dotenv" },
