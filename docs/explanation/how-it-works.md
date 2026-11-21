@@ -61,7 +61,9 @@ strips anything the model wraps around the command, such as code fences, a
 `$ ` prompt or a `Command:` label.
 
 **Check it.** The command must be valid syntax for your shell (`<shell> -n`), and each
-program it calls must be installed. If it fails, the model is shown the error
+program it calls must be installed. Each short option must be on the program's man
+page, and find's tests on find's
+([ADR 0009](../adr/0009-check-options-against-the-man-page.md)). If it fails, the model is shown the error
 and asked again, up to three attempts in total. The checks catch commands that
 can't work. They don't judge whether a command is a good idea. See
 [Safety model](safety.md).

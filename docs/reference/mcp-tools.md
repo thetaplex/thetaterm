@@ -30,8 +30,8 @@ of a program on `PATH`. Paths and names that start with `-` are refused too.
 
 Checks `command` without running it.
 
-- `problem`: why the command would fail, such as a syntax error or
-  `NAME: command not found`. `null` if none was found.
+- `problem`: why the command would fail, such as a syntax error,
+  `NAME: command not found` or `NAME has no -X option on this system`. `null` if none was found.
 - `outside`: why the command reaches outside the current directory, such as
   `absolute path /tmp/x`. `null` if none was found. The reasons are listed in
   [Messages](messages.md).

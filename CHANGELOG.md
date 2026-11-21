@@ -7,6 +7,16 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### Added
+
+- The command check rejects a short option that isn't on the program's man
+  page, including programs run by `xargs` and `find -exec`, and find tests
+  that aren't on find's, and the model tries again. Asked for the largest file
+  10 times on macOS, `gemma4:e4b-mlx` wrote the GNU-only `du -b` 6 times
+  without the check, and no missing option with it.
+- A note for `du`: `-b` and `--max-depth` are GNU only, and BSD du has no
+  option for bytes.
+
 ## [0.5.2] - 2026-10-16
 
 ### Fixed
