@@ -7,6 +7,13 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### Added
+
+- Skill `skill_find_repo_by_name`: "find the repo X" now gives
+  `find ~ -type d -name X -prune 2>/dev/null`. The word "repo" made
+  `gemma4:e4b-mlx` choose `git` every time, and it wrote
+  `git -C X --version`.
+
 ## [0.6.0] - 2026-11-21
 
 ### Added
