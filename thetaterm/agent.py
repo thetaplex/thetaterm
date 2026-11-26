@@ -43,6 +43,8 @@ STOPWORDS = set(_STOPWORDS.split())
 PREFIXES = {"sudo", "env", "time", "nohup", "command", "!"}
 MAX_REFERENCE_CHARS = 3500
 RETRIES = 2
+# earlier turns sent with a follow-up; a small model loses the task in more
+HISTORY_TURNS = 3
 # devices that hold no files; anything else under /dev (disks) counts as outside
 SAFE_DEVICE = re.compile(r"/dev/(null|zero|u?random|tty|std(in|out|err)|fd/\d+)")
 # variables that can't name a directory
@@ -449,8 +451,19 @@ class Agent:
                 names.append(name)
         return names[:2]
 
-    def generate(self, query: str) -> str:
-        """Best command for the query; raises RuntimeError if none passes checks."""
+    def generate(self, query: str, history: list[tuple[str, str]] | None = None) -> str:
+        """Best command for the query; raises RuntimeError if none passes checks.
+
+        history: earlier (task, command) pairs of this session, oldest first, so
+        a follow-up ("now only the .py ones") can build on the last command.
+        """
+        history = (history or [])[-HISTORY_TURNS:]
+        earlier = "".join(
+            f"Task: {task}\nCommand: {command}\n" for task, command in history
+        )
+        # tool choice, man page excerpts and skills need the earlier task's words
+        # too: "only the .py ones" names no program
+        lookup = f"{history[-1][0]}\n{query}" if history else query
         prompt = (
             "You are a CLI assistant generating shell commands that will be run directly on the user's machine. "
             "Use the reference below for this system's version of the tool, which may differ from GNU/Linux behavior, "
@@ -461,13 +474,13 @@ class Agent:
         # a thinking model works out the platform's flags itself; the extra
         # round trip and man page only slow it down (evals: 49/50 vs 48/50)
         # best last, nearest the rules and task
-        chosen_programs = [] if self.thinking else self.choose(query)
+        chosen_programs = [] if self.thinking else self.choose(lookup)
         for chosen in reversed(chosen_programs):
-            ref = reference(chosen, query)
+            ref = reference(chosen, lookup)
             prompt += f"\n<reference>\n{ref}\n</reference>\n"
         if not self.thinking and self.use_skills:
             skills_text = format_skills(
-                query, chosen_programs, skills_dir=self.skills_dir
+                lookup, chosen_programs, skills_dir=self.skills_dir
             )
             if skills_text:
                 prompt += f"\n<skill>\n{skills_text}\n</skill>\n"
@@ -479,8 +492,14 @@ class Agent:
             # small models skip what they don't write down (evals)
             "First list the steps, and check each option you use exists in this system's version of the program. "
             "Then give the command in a single code block, the only one in your reply.\n</rules>\n"
-            f"\n<task>\n{query}\n</task>\n"
         )
+        if earlier:
+            prompt += (
+                "\n<history>\nEarlier tasks in this session and the commands written for them, oldest first. "
+                "If the task below refers to them, build on the last one.\n"
+                f"{earlier}</history>\n"
+            )
+        prompt += f"\n<task>\n{query}\n</task>\n"
 
         attempt = prompt
         for _ in range(RETRIES + 1):
