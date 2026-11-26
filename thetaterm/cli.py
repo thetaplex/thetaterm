@@ -75,16 +75,19 @@ def process_query(
     query: str,
     yes: bool,
     log_failures: bool = False,
-    last: dict[str, str] | None = None,
+    history: list[tuple[str, str]] | None = None,
 ) -> int:
-    """Generate a command for the query, confirm it, run it. Returns its exit code."""
+    """Generate a command for the query, confirm it, run it. Returns its exit code.
+
+    history: this session's earlier (query, command) pairs; the new pair is appended.
+    """
     # `!cmd` is the user's own command, as in a shell: run as typed, no model, no question
     if query.startswith("!"):
         command = query[1:].strip()
         return run(command) if command else 0
     try:
         with console.status("thinking…"):
-            command = agent.generate(query)
+            command = agent.generate(query, history)
     except RuntimeError as e:
         console.print(str(e), style="red", markup=False)
         if log_failures:
@@ -93,9 +96,9 @@ def process_query(
     except KeyboardInterrupt:  # back to the > prompt, no traceback
         return 130
 
-    if last is not None:
-        last["query"] = query
-        last["command"] = command
+    # declined ones too: "no, use rsync" follows up on them
+    if history is not None:
+        history.append((query, command))
 
     # markup=False: `grep [abc] f` must show its brackets, and `[conceal]` mustn't
     # hide words, or the command you approve isn't the one that runs
@@ -179,7 +182,7 @@ def tterm(
     console.print(
         "[dim]Describe what you want, !command to run one, ?bad [note] to log last command. Ctrl-D to exit.[/dim]"
     )
-    last: dict[str, str] = {}
+    history: list[tuple[str, str]] = []
     while True:
         try:
             line = input("\n> ").strip()
@@ -187,16 +190,15 @@ def tterm(
             console.print()
             return
         if line.startswith("?bad"):
-            if not last:
+            if not history:
                 console.print("nothing to log yet", style="yellow")
             else:
                 note = line[4:].strip()
-                log_failure(
-                    agent, last["query"], last["command"], "user_marked", note=note
-                )
+                last_query, last_command = history[-1]
+                log_failure(agent, last_query, last_command, "user_marked", note=note)
                 console.print(f"logged failure to {FAILURES_LOG}", style="dim")
         elif line:
-            process_query(agent, line, yes, log_failures=log_failures, last=last)
+            process_query(agent, line, yes, log_failures=log_failures, history=history)
 
 
 if __name__ == "__main__":

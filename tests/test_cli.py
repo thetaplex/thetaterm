@@ -23,7 +23,9 @@ def run(monkeypatch, command, yes, answer, log_failures=False):
 
     monkeypatch.setattr(typer, "confirm", confirm)
     monkeypatch.setattr(subprocess, "run", fake_run)
-    agent = SimpleNamespace(generate=lambda query: command, model="m", env="e")
+    agent = SimpleNamespace(
+        generate=lambda query, history=None: command, model="m", env="e"
+    )
     process_query(agent, "q", yes, log_failures=log_failures)
     return asked, ran
 
@@ -45,7 +47,7 @@ def test_ctrl_c_while_running_returns_to_the_prompt(monkeypatch):
         raise KeyboardInterrupt
 
     monkeypatch.setattr(subprocess, "run", interrupted)
-    agent = SimpleNamespace(generate=lambda query: "sleep 100")
+    agent = SimpleNamespace(generate=lambda query, history=None: "sleep 100")
     assert process_query(agent, "q", yes=True) == 130
 
 
@@ -59,7 +61,7 @@ def test_outside_commands_always_ask_defaulting_to_no_even_with_y(monkeypatch):
 
 
 def test_bang_runs_the_users_own_command_without_the_model_or_a_question(monkeypatch):
-    def no_model(query):
+    def no_model(query, history=None):
         raise AssertionError("the model was asked")
 
     asked, ran = [], []
@@ -100,7 +102,7 @@ def test_failure_logging_is_opt_in_and_captures_declines_errors_and_nonzero(
         subprocess, "run", lambda cmd, **k: SimpleNamespace(returncode=2)
     )
     process_query(
-        SimpleNamespace(generate=lambda q: "badcmd", model="m", env="e"),
+        SimpleNamespace(generate=lambda q, history=None: "badcmd", model="m", env="e"),
         "q2",
         yes=True,
         log_failures=True,
@@ -110,13 +112,13 @@ def test_failure_logging_is_opt_in_and_captures_declines_errors_and_nonzero(
         subprocess, "run", lambda cmd, **k: SimpleNamespace(returncode=130)
     )
     process_query(
-        SimpleNamespace(generate=lambda q: "sleep 9", model="m", env="e"),
+        SimpleNamespace(generate=lambda q, history=None: "sleep 9", model="m", env="e"),
         "q3",
         yes=True,
         log_failures=True,
     )
 
-    def boom(q):
+    def boom(q, history=None):
         raise RuntimeError("no working command")
 
     process_query(
@@ -129,3 +131,21 @@ def test_failure_logging_is_opt_in_and_captures_declines_errors_and_nonzero(
     rows = [json.loads(line) for line in log_path.read_text().splitlines()]
     assert [r["reason"] for r in rows] == ["declined", "exit:2", "generate_error"]
     assert all(r["resolved"] is False for r in rows)
+
+
+def test_interactive_requests_carry_the_session_history(monkeypatch):
+    monkeypatch.setattr(typer, "confirm", lambda *a, **k: False)
+    seen = []
+
+    def generate(query, history=None):
+        seen.append(list(history or []))
+        return f"cmd{len(seen)}"
+
+    agent = SimpleNamespace(generate=generate, model="m", env="e")
+    history: list[tuple[str, str]] = []
+    process_query(agent, "first", yes=False, history=history)
+    process_query(agent, "!echo hi", yes=False, history=history)  # not the model's
+    process_query(agent, "now that", yes=False, history=history)
+    # declined commands count: the follow-up may be "no, do it another way"
+    assert seen == [[], [("first", "cmd1")]]
+    assert history == [("first", "cmd1"), ("now that", "cmd2")]

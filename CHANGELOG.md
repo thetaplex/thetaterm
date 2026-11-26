@@ -14,6 +14,13 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
   `gemma4:e4b-mlx` choose `git` every time, and it wrote
   `git -C X --version`.
 
+### Fixed
+
+- Interactive mode now keeps the conversation. Before, each request went to
+  the model alone, so a follow-up such as "now only the .py ones" had no
+  earlier task to build on. The last 3 requests and their commands are now
+  sent with each request.
+
 ## [0.6.0] - 2026-11-21
 
 ### Added

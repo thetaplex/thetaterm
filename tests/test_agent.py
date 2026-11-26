@@ -299,3 +299,25 @@ def test_thinking_skips_suggestions_and_man_page():
     agent.ask = lambda prompt, max_tokens=None: prompts.append(prompt) or "ls -la"
     assert agent.generate("list files") == "ls -la"
     assert len(prompts) == 1 and "<reference>" not in prompts[0]
+
+
+def test_follow_up_sees_the_earlier_task_and_command():
+    agent = Agent("m", "http://localhost")
+    chose, prompts = [], []
+    agent.choose = lambda task: chose.append(task) or []
+    agent.ask = lambda prompt, max_tokens=None: prompts.append(prompt) or "ls -S *.py"
+    history = [("list files by size", "ls -S")]
+    assert agent.generate("now only the .py ones", history) == "ls -S *.py"
+    assert "<history>" in prompts[0] and "Command: ls -S" in prompts[0]
+    # the follow-up names no program: tool choice needs the earlier task's words
+    assert "list files by size" in chose[0]
+    # history comes before the task, so the task stays last
+    assert prompts[0].index("<history>") < prompts[0].index("<task>")
+
+
+def test_no_history_block_on_a_first_request():
+    agent = Agent("m", "http://localhost", thinking=True)
+    prompts = []
+    agent.ask = lambda prompt, max_tokens=None: prompts.append(prompt) or "ls"
+    agent.generate("list files")
+    assert "<history>" not in prompts[0]

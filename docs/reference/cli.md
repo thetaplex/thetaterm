@@ -39,6 +39,11 @@ shell each time, so `!cd` and `!export` don't carry over to later lines. A bare
 `!` does nothing. Ctrl-D or Ctrl-C at
 the `>` prompt exits. Errors are printed and the session carries on.
 
+Requests can follow up on earlier ones: after "list files by size", "now only
+the .py ones" works. Each request goes to the model with the last 3 requests of
+the session and the commands written for them, run or declined. `!` lines are
+not included. The session history starts empty each time you start thetaterm.
+
 ## Confirmation prompt
 
 | Prompt | When | Enter means |
